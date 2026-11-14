@@ -1,12 +1,12 @@
-import { expect } from 'chai';
-import * as React from 'react';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer } from '@mui/internal-test-utils';
 import ImageListItemBar, {
   imageListItemBarClasses as classes,
 } from '@mui/material/ImageListItemBar';
+import describeConformance from '../../test/describeConformance';
 
 describe('<ImageListItemBar />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<ImageListItemBar title="conform?" />, () => ({
     classes,
@@ -16,7 +16,7 @@ describe('<ImageListItemBar />', () => {
     muiName: 'MuiImageListItemBar',
     testDeepOverrides: { slotName: 'titleWrap', slotClassName: classes.titleWrap },
     testVariantProps: { position: 'top', actionPosition: 'left' },
-    skip: ['componentProp', 'componentsProp'],
+    skip: ['componentProp'],
   }));
 
   const itemData = {
@@ -42,6 +42,22 @@ describe('<ImageListItemBar />', () => {
       });
     });
 
+    describe('prop:actionPosition', () => {
+      it('should render the actionPositionLeft class', () => {
+        const { container } = render(<ImageListItemBar title="text" actionPosition="left" />);
+
+        expect(container.querySelector('div')).to.have.class(classes.root);
+        expect(container.querySelector('div')).to.have.class(classes.actionPositionLeft);
+      });
+
+      it('should render the actionPositionRight class', () => {
+        const { container } = render(<ImageListItemBar title="text" actionPosition="right" />);
+
+        expect(container.querySelector('div')).to.have.class(classes.root);
+        expect(container.querySelector('div')).to.have.class(classes.actionPositionRight);
+      });
+    });
+
     describe('prop: position', () => {
       describe('position="top"', () => {
         it('should render the positionTop class', () => {
@@ -60,25 +76,23 @@ describe('<ImageListItemBar />', () => {
           expect(container.querySelector('div')).to.have.class(classes.positionBelow);
         });
 
-        it('should render a child div with the titleWrapBelow class', () => {
+        it('should render the titleWrap class and positionBelow on the root', () => {
           const { container } = render(<ImageListItemBar title="text" position="below" />);
 
+          expect(container.querySelector('div')).to.have.class(classes.positionBelow);
           expect(container.firstChild.querySelector('div')).to.have.class(classes.titleWrap);
-          expect(container.firstChild.querySelector('div')).to.have.class(classes.titleWrapBelow);
         });
       });
     });
 
     describe('prop: actionPosition', () => {
-      it('should render a child div with the titleWrapActionPosLeft class', () => {
+      it('should render the titleWrap class and actionPositionLeft on the root', () => {
         const { container } = render(
           <ImageListItemBar title="text" actionIcon={<div />} actionPosition="left" />,
         );
 
+        expect(container.querySelector('div')).to.have.class(classes.actionPositionLeft);
         expect(container.firstChild.querySelector('div')).to.have.class(classes.titleWrap);
-        expect(container.firstChild.querySelector('div')).to.have.class(
-          classes.titleWrapActionPosLeft,
-        );
       });
     });
   });

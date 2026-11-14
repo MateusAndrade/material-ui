@@ -1,10 +1,21 @@
-import * as React from 'react';
 import Modal, { ModalProps } from '@mui/material/Modal';
 
-const backdropProps: ModalProps['BackdropProps'] = {
-  onEntered: () => console.log('entered'),
-};
+<Modal open slotProps={{ backdrop: { onEntered: () => console.log('entered') } }}>
+  <div />
+</Modal>;
 
-<Modal open BackdropProps={{ onEntered: () => console.log('entered') }}>
+// slotProps slots as object
+<Modal open slotProps={{ backdrop: { invisible: true }, root: { id: 'modal' } }}>
+  <div />
+</Modal>;
+
+// slotProps slots as function
+<Modal
+  open
+  slotProps={{
+    root: ({ disableAutoFocus }) => ({ className: disableAutoFocus ? '' : 'focused' }),
+    backdrop: ({ exited }) => ({ className: exited ? 'hidden' : '' }),
+  }}
+>
   <div />
 </Modal>;

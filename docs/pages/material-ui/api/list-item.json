@@ -1,0 +1,93 @@
+{
+  "props": {
+    "alignItems": {
+      "type": { "name": "enum", "description": "'center'<br>&#124;&nbsp;'flex-start'" },
+      "default": "'center'"
+    },
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "component": { "type": { "name": "elementType" } },
+    "dense": { "type": { "name": "bool" }, "default": "false" },
+    "disableGutters": { "type": { "name": "bool" }, "default": "false" },
+    "disablePadding": { "type": { "name": "bool" }, "default": "false" },
+    "divider": { "type": { "name": "bool" }, "default": "false" },
+    "secondaryAction": { "type": { "name": "node" } },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ root?: func<br>&#124;&nbsp;object, secondaryAction?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": {
+        "name": "shape",
+        "description": "{ root?: elementType, secondaryAction?: elementType }"
+      },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
+  "name": "ListItem",
+  "imports": [
+    "import ListItem from '@mui/material/ListItem';",
+    "import { ListItem } from '@mui/material';"
+  ],
+  "classes": [
+    {
+      "key": "alignItemsFlexStart",
+      "className": "MuiListItem-alignItemsFlexStart",
+      "description": "Styles applied to the component element if `alignItems=\"flex-start\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "dense",
+      "className": "MuiListItem-dense",
+      "description": "Styles applied to the component element if dense.",
+      "isGlobal": false
+    },
+    {
+      "key": "divider",
+      "className": "MuiListItem-divider",
+      "description": "Styles applied to the inner `component` element if `divider={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "gutters",
+      "className": "MuiListItem-gutters",
+      "description": "Styles applied to the inner `component` element unless `disableGutters={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "padding",
+      "className": "MuiListItem-padding",
+      "description": "Styles applied to the root element unless `disablePadding={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "root",
+      "className": "MuiListItem-root",
+      "description": "Styles applied to the root element.",
+      "isGlobal": false
+    },
+    {
+      "key": "secondaryAction",
+      "className": "MuiListItem-secondaryAction",
+      "description": "Styles applied to the secondary action element.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiListItem",
+  "forwardsRefTo": "HTMLLIElement",
+  "filename": "/packages/mui-material/src/ListItem/ListItem.js",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/material-ui/react-list/\">Lists</a></li></ul>"
+}

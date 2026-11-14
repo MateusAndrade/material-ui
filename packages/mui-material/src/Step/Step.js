@@ -1,12 +1,13 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { integerPropType } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import StepperContext from '../Stepper/StepperContext';
+import integerPropType from '@mui/utils/integerPropType';
+import composeClasses from '@mui/utils/composeClasses';
+import { useStepperContext } from '../Stepper/StepperContext';
 import StepContext from './StepContext';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { getStepUtilityClass } from './stepClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -19,7 +20,7 @@ const useUtilityClasses = (ownerState) => {
   return composeClasses(slots, getStepUtilityClass, classes);
 };
 
-const StepRoot = styled('div', {
+const StepRoot = styled('li', {
   name: 'MuiStep',
   slot: 'Root',
   overridesResolver: (props, styles) => {
@@ -32,23 +33,54 @@ const StepRoot = styled('div', {
       ownerState.completed && styles.completed,
     ];
   },
-})(({ ownerState }) => ({
-  ...(ownerState.orientation === 'horizontal' && {
-    paddingLeft: 8,
-    paddingRight: 8,
-  }),
-  ...(ownerState.alternativeLabel && {
-    flex: 1,
-    position: 'relative',
-  }),
-}));
+})({
+  variants: [
+    {
+      props: { orientation: 'horizontal', alternativeLabel: false, hasConnector: false },
+      style: {
+        paddingLeft: 8,
+      },
+    },
+    {
+      props: { orientation: 'horizontal', alternativeLabel: false, last: true },
+      style: {
+        paddingRight: 8,
+      },
+    },
+    {
+      props: { orientation: 'horizontal', alternativeLabel: false, hasConnector: true },
+      style: {
+        flex: '1 1 auto',
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        alignItems: 'center',
+        gap: 8,
+      },
+    },
+    {
+      props: { orientation: 'vertical', alternativeLabel: true },
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+      },
+    },
+    {
+      props: { orientation: 'horizontal', alternativeLabel: true },
+      style: {
+        flex: 1,
+        position: 'relative',
+      },
+    },
+  ],
+});
 
 const Step = React.forwardRef(function Step(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiStep' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiStep' });
   const {
     active: activeProp,
     children,
     className,
+    component = 'li',
     completed: completedProp,
     disabled: disabledProp,
     expanded = false,
@@ -57,8 +89,8 @@ const Step = React.forwardRef(function Step(inProps, ref) {
     ...other
   } = props;
 
-  const { activeStep, connector, alternativeLabel, orientation, nonLinear } =
-    React.useContext(StepperContext);
+  const { activeStep, connector, alternativeLabel, orientation, nonLinear, isTabList } =
+    useStepperContext();
 
   let [active = false, completed = false, disabled = false] = [
     activeProp,
@@ -79,6 +111,8 @@ const Step = React.forwardRef(function Step(inProps, ref) {
     [index, last, expanded, active, completed, disabled],
   );
 
+  const hasConnector = !!connector && index !== 0;
+
   const ownerState = {
     ...props,
     active,
@@ -87,41 +121,34 @@ const Step = React.forwardRef(function Step(inProps, ref) {
     completed,
     disabled,
     expanded,
+    component,
+    hasConnector,
   };
 
   const classes = useUtilityClasses(ownerState);
 
-  const newChildren = (
-    <StepRoot
-      className={clsx(classes.root, className)}
-      ref={ref}
-      ownerState={ownerState}
-      {...other}
-    >
-      {connector && alternativeLabel && index !== 0 ? connector : null}
-      {children}
-    </StepRoot>
-  );
-
   return (
     <StepContext.Provider value={contextValue}>
-      {connector && !alternativeLabel && index !== 0 ? (
-        <React.Fragment>
-          {connector}
-          {newChildren}
-        </React.Fragment>
-      ) : (
-        newChildren
-      )}
+      <StepRoot
+        as={component}
+        className={clsx(classes.root, className)}
+        ref={ref}
+        ownerState={ownerState}
+        role={isTabList ? 'none' : undefined}
+        {...other}
+      >
+        {hasConnector ? connector : null}
+        {children}
+      </StepRoot>
     </StepContext.Provider>
   );
 });
 
 Step.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * Sets the step as active. Is passed to child components.
    */
@@ -135,13 +162,18 @@ Step.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
    * Mark the step as completed. Is passed to child components.
    */
   completed: PropTypes.bool,
+  /**
+   * The component used for the root node.
+   * Either a string to use a HTML element or a component.
+   */
+  component: PropTypes.elementType,
   /**
    * If `true`, the step is disabled, will also disable the button if
    * `StepButton` is a child of `Step`. Is passed to child components.
@@ -165,7 +197,11 @@ Step.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default Step;

@@ -1,0 +1,35 @@
+# Configuration for support-requests - https://github.com/dessant/support-requests
+name: Support Stack Overflow
+
+on:
+  issues:
+    types: [labeled, unlabeled, reopened]
+
+permissions: {}
+
+jobs:
+  mark-support:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: dessant/support-requests@04320880d61b7fcaac4216e60522cb569478a63d # v5.0.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Label used to mark issues as support requests
+          support-label: 'support: Stack Overflow'
+          # Comment to post on issues marked as support requests. Add a link
+          # to a support page, or set to `false` to disable
+          issue-comment: |
+            👋 Thanks for using this project!
+
+            We use GitHub issues exclusively as a bug and feature requests tracker, however, this issue appears to be a support request.
+
+            For support with Material UI please check out https://mui.com/material-ui/getting-started/support/. Thanks!
+
+            If you have a question on Stack Overflow, you are welcome to link to it here, it might help others.
+            If your issue is subsequently confirmed as a bug, and the report follows the issue template, it can be reopened.
+          close-issue: true
+          issue-close-reason: 'not planned'
+          lock-issue: false

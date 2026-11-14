@@ -1,0 +1,106 @@
+{
+  "props": {
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "delay": { "type": { "name": "number" }, "default": "0" },
+    "icon": { "type": { "name": "node" } },
+    "id": { "type": { "name": "string" } },
+    "open": { "type": { "name": "bool" } },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ fab?: func<br>&#124;&nbsp;object, staticTooltip?: func<br>&#124;&nbsp;object, staticTooltipLabel?: func<br>&#124;&nbsp;object, tooltip?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": {
+        "name": "shape",
+        "description": "{ fab?: elementType, staticTooltip?: elementType, staticTooltipLabel?: elementType, tooltip?: elementType }"
+      },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
+  "name": "SpeedDialAction",
+  "imports": [
+    "import SpeedDialAction from '@mui/material/SpeedDialAction';",
+    "import { SpeedDialAction } from '@mui/material';"
+  ],
+  "slots": [
+    {
+      "name": "fab",
+      "description": "The component that renders the fab.",
+      "default": "Fab",
+      "class": "MuiSpeedDialAction-fab"
+    },
+    {
+      "name": "tooltip",
+      "description": "The component that renders the tooltip.",
+      "default": "Tooltip",
+      "class": null
+    },
+    {
+      "name": "staticTooltip",
+      "description": "The component that renders the static tooltip.",
+      "default": "'span'",
+      "class": "MuiSpeedDialAction-staticTooltip"
+    },
+    {
+      "name": "staticTooltipLabel",
+      "description": "The component that renders the static tooltip label.",
+      "default": "'span'",
+      "class": "MuiSpeedDialAction-staticTooltipLabel"
+    }
+  ],
+  "classes": [
+    {
+      "key": "fabClosed",
+      "className": "MuiSpeedDialAction-fabClosed",
+      "description": "Styles applied to the Fab component if `open={false}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "staticTooltipClosed",
+      "className": "MuiSpeedDialAction-staticTooltipClosed",
+      "description": "Styles applied to the root element if `slotProps.tooltip.open` is `true` and `open` is `false`.",
+      "isGlobal": false
+    },
+    {
+      "key": "tooltipPlacementBottom",
+      "className": "MuiSpeedDialAction-tooltipPlacementBottom",
+      "description": "Styles applied to the root element if `slotProps.tooltip.open` is `true` and `slotProps.tooltip.placement` contains \"bottom\".",
+      "isGlobal": false
+    },
+    {
+      "key": "tooltipPlacementLeft",
+      "className": "MuiSpeedDialAction-tooltipPlacementLeft",
+      "description": "Styles applied to the root element if `slotProps.tooltip.open` is `true` and `slotProps.tooltip.placement` contains \"left\".",
+      "isGlobal": false
+    },
+    {
+      "key": "tooltipPlacementRight",
+      "className": "MuiSpeedDialAction-tooltipPlacementRight",
+      "description": "Styles applied to the root element if `slotProps.tooltip.open` is `true` and `slotProps.tooltip.placement` contains \"right\".",
+      "isGlobal": false
+    },
+    {
+      "key": "tooltipPlacementTop",
+      "className": "MuiSpeedDialAction-tooltipPlacementTop",
+      "description": "Styles applied to the root element if `slotProps.tooltip.open` is `true` and `slotProps.tooltip.placement` contains \"top\".",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiSpeedDialAction",
+  "forwardsRefTo": "HTMLButtonElement",
+  "filename": "/packages/mui-material/src/SpeedDialAction/SpeedDialAction.js",
+  "inheritance": { "component": "Tooltip", "pathname": "/material-ui/api/tooltip/" },
+  "demos": "<ul><li><a href=\"/material-ui/react-speed-dial/\">Speed Dial</a></li></ul>"
+}

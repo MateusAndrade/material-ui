@@ -1,20 +1,32 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import Typography, { typographyClasses } from '@mui/material/Typography';
 import ListItemText, { listItemTextClasses as classes } from '@mui/material/ListItemText';
+import describeConformance from '../../test/describeConformance';
 
 describe('<ListItemText />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
-  describeConformance(<ListItemText>Conformance?</ListItemText>, () => ({
+  describeConformance(<ListItemText primary="Primary" secondary="Secondary" />, () => ({
     classes,
     inheritComponent: 'div',
     render,
     muiName: 'MuiListItemText',
     testVariantProps: { inset: true },
     refInstanceof: window.HTMLDivElement,
-    skip: ['componentProp', 'componentsProp'],
+    slots: {
+      primary: {
+        expectedClassName: classes.primary,
+      },
+      secondary: {
+        expectedClassName: classes.secondary,
+      },
+      root: {
+        expectedClassName: classes.root,
+      },
+    },
+    skip: ['componentProp'],
   }));
 
   it('should render with inset class', () => {
@@ -155,22 +167,44 @@ describe('<ListItemText />', () => {
     expect(texts[1]).have.text('This is the secondary text');
   });
 
-  it('should pass primaryTypographyProps to primary Typography component', () => {
+  it('should use variant if provided', () => {
+    render(
+      <ListItemText
+        primary="This is the primary text"
+        slotProps={{ primary: { variant: 'h3' }, secondary: { variant: 'h4' } }}
+        secondary="This is the secondary text"
+      />,
+    );
+
+    expect(screen.getByText('This is the primary text')).to.have.tagName('h3');
+    expect(screen.getByText('This is the secondary text')).to.have.tagName('h4');
+  });
+
+  it('should fall back to the default tag name if no variant provided', () => {
+    render(
+      <ListItemText primary="This is the primary text" secondary="This is the secondary text" />,
+    );
+
+    expect(screen.getByText('This is the primary text')).to.have.tagName('span');
+    expect(screen.getByText('This is the secondary text')).to.have.tagName('p');
+  });
+
+  it('should pass slotProps.primary to primary Typography component', () => {
     const { container } = render(
       <ListItemText
         primary="This is the primary text"
-        primaryTypographyProps={{ 'data-test': 'foo' }}
+        slotProps={{ primary: { 'data-test': 'foo' } }}
       />,
     );
     expect(container.querySelector('span')).to.have.attribute('data-test');
   });
 
-  it('should pass secondaryTypographyProps to secondary Typography component', () => {
+  it('should pass slotProps.secondary to secondary Typography component', () => {
     const { container } = render(
       <ListItemText
         primary="This is the primary text"
         secondary="This is the secondary text"
-        secondaryTypographyProps={{ 'data-test': 'foo' }}
+        slotProps={{ secondary: { 'data-test': 'foo' } }}
       />,
     );
     expect(container.querySelector('p')).to.have.attribute('data-test');

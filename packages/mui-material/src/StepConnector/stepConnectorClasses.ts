@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface StepConnectorClasses {
   /** Styles applied to the root element. */
@@ -17,10 +18,6 @@ export interface StepConnectorClasses {
   disabled: string;
   /** Styles applied to the line element. */
   line: string;
-  /** Styles applied to the root element if `orientation="horizontal"`. */
-  lineHorizontal: string;
-  /** Styles applied to the root element if `orientation="vertical"`. */
-  lineVertical: string;
 }
 
 export type StepConnectorClassKey = keyof StepConnectorClasses;
@@ -38,8 +35,6 @@ const stepConnectorClasses: StepConnectorClasses = generateUtilityClasses('MuiSt
   'completed',
   'disabled',
   'line',
-  'lineHorizontal',
-  'lineVertical',
 ]);
 
 export default stepConnectorClasses;

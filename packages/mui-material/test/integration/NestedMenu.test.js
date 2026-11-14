@@ -1,8 +1,16 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, within } from 'test/utils';
+import { createRenderer, within, screen } from '@mui/internal-test-utils';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+
+const NoTransition = React.forwardRef(function NoTransition(props, ref) {
+  const { children, in: inProp } = props;
+  if (!inProp) {
+    return null;
+  }
+  return <div ref={ref}>{children}</div>;
+});
 
 function NestedMenu(props) {
   const { firstMenuOpen, secondMenuOpen } = props;
@@ -16,17 +24,19 @@ function NestedMenu(props) {
       </button>
       <Menu
         anchorEl={anchorEl}
-        MenuListProps={{ id: 'second-menu' }}
+        hideBackdrop
+        slotProps={{ list: { id: 'second-menu' } }}
+        slots={{ transition: NoTransition }}
         open={Boolean(secondMenuOpen && canBeOpen)}
-        transitionDuration={0}
       >
         <MenuItem>Second Menu</MenuItem>
       </Menu>
       <Menu
         anchorEl={anchorEl}
-        MenuListProps={{ id: 'first-menu' }}
+        hideBackdrop
+        slotProps={{ list: { id: 'first-menu' } }}
+        slots={{ transition: NoTransition }}
         open={Boolean(firstMenuOpen && canBeOpen)}
-        transitionDuration={0}
       >
         <MenuItem>Profile 1</MenuItem>
         <MenuItem>My account</MenuItem>
@@ -37,45 +47,45 @@ function NestedMenu(props) {
 }
 
 describe('<NestedMenu> integration', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   it('should not be open', () => {
-    const { queryAllByRole } = render(<NestedMenu />);
+    render(<NestedMenu />);
 
-    expect(queryAllByRole('menu')).to.have.length(0);
+    expect(screen.queryAllByRole('menu')).to.have.length(0);
   });
 
   it('should focus the first item of the first menu when nothing has been selected', () => {
-    const { getByRole } = render(<NestedMenu firstMenuOpen />);
+    render(<NestedMenu firstMenuOpen />);
 
-    expect(getByRole('menu')).to.have.id('first-menu');
-    expect(within(getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
+    expect(screen.getByRole('menu')).to.have.id('first-menu');
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
   });
 
   it('should focus the first item of the second menu when nothing has been selected', () => {
-    const { getByRole } = render(<NestedMenu secondMenuOpen />);
+    render(<NestedMenu secondMenuOpen />);
 
-    expect(getByRole('menu')).to.have.id('second-menu');
-    expect(within(getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
+    expect(screen.getByRole('menu')).to.have.id('second-menu');
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
   });
 
   it('should open the first menu after it was closed', () => {
-    const { getByRole, setProps } = render(<NestedMenu firstMenuOpen />);
+    const { setProps } = render(<NestedMenu firstMenuOpen />);
 
     setProps({ firstMenuOpen: false });
     setProps({ firstMenuOpen: true });
 
-    expect(getByRole('menu')).to.have.id('first-menu');
-    expect(within(getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
+    expect(screen.getByRole('menu')).to.have.id('first-menu');
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
   });
 
   it('should be able to open second menu again', () => {
-    const { getByRole, setProps } = render(<NestedMenu secondMenuOpen />);
+    const { setProps } = render(<NestedMenu secondMenuOpen />);
 
     setProps({ secondMenuOpen: false });
     setProps({ secondMenuOpen: true });
 
-    expect(getByRole('menu')).to.have.id('second-menu');
-    expect(within(getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
+    expect(screen.getByRole('menu')).to.have.id('second-menu');
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem')[0]).toHaveFocus();
   });
 });

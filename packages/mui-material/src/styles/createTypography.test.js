@@ -1,11 +1,11 @@
-import { expect } from 'chai';
+import { describe, beforeAll, it, expect } from 'vitest';
 import createPalette from './createPalette';
 import createTypography from './createTypography';
 
 describe('createTypography', () => {
   let palette;
 
-  before(() => {
+  beforeAll(() => {
     palette = createPalette({});
   });
 
@@ -72,6 +72,16 @@ describe('createTypography', () => {
     expect(createTypography(palette, { fontFamily: 'Gotham' }).h1.letterSpacing).to.equal(
       undefined,
     );
+  });
+
+  // TODO v6: remove, see https://github.com/mui/material-ui/pull/38123
+  it('should apply font CSS properties to inherit variant', () => {
+    const typography = createTypography(palette, {});
+    const fontProperties = ['fontFamily', 'fontWeight', 'fontSize', 'lineHeight', 'letterSpacing'];
+
+    fontProperties.forEach((prop) => {
+      expect(typography.inherit[prop]).to.equal('inherit');
+    });
   });
 
   describe('warnings', () => {

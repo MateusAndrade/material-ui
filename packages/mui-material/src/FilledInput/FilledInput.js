@@ -1,23 +1,40 @@
+'use client';
 import * as React from 'react';
-import { refType, deepmerge } from '@mui/utils';
+import deepmerge from '@mui/utils/deepmerge';
+import refType from '@mui/utils/refType';
 import PropTypes from 'prop-types';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import composeClasses from '@mui/utils/composeClasses';
 import InputBase from '../InputBase';
-import styled, { rootShouldForwardProp } from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import createSimplePaletteValueFilter from '../utils/createSimplePaletteValueFilter';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import filledInputClasses, { getFilledInputUtilityClass } from './filledInputClasses';
+import selectClasses from '../Select/selectClasses';
 import {
   rootOverridesResolver as inputBaseRootOverridesResolver,
   inputOverridesResolver as inputBaseInputOverridesResolver,
   InputBaseRoot,
-  InputBaseComponent as InputBaseInput,
+  InputBaseInput,
 } from '../InputBase/InputBase';
+import { capitalize } from '../utils';
+import { getTransitionStyles } from '../transitions/utils';
 
 const useUtilityClasses = (ownerState) => {
-  const { classes, disableUnderline } = ownerState;
+  const { classes, disableUnderline, startAdornment, endAdornment, size, hiddenLabel, multiline } =
+    ownerState;
 
   const slots = {
-    root: ['root', !disableUnderline && 'underline'],
+    root: [
+      'root',
+      !disableUnderline && 'underline',
+      startAdornment && 'adornedStart',
+      endAdornment && 'adornedEnd',
+      size === 'small' && `size${capitalize(size)}`,
+      hiddenLabel && 'hiddenLabel',
+      multiline && 'multiline',
+    ],
     input: ['input'],
   };
 
@@ -40,155 +57,211 @@ const FilledInputRoot = styled(InputBaseRoot, {
       !ownerState.disableUnderline && styles.underline,
     ];
   },
-})(({ theme, ownerState }) => {
-  const light = theme.palette.mode === 'light';
-  const bottomLineColor = light ? 'rgba(0, 0, 0, 0.42)' : 'rgba(255, 255, 255, 0.7)';
-  const backgroundColor = light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.09)';
-  return {
-    position: 'relative',
-    backgroundColor,
-    borderTopLeftRadius: theme.shape.borderRadius,
-    borderTopRightRadius: theme.shape.borderRadius,
-    transition: theme.transitions.create('background-color', {
-      duration: theme.transitions.duration.shorter,
-      easing: theme.transitions.easing.easeOut,
-    }),
-    '&:hover': {
-      backgroundColor: light ? 'rgba(0, 0, 0, 0.09)' : 'rgba(255, 255, 255, 0.13)',
-      // Reset on touch devices, it doesn't add specificity
-      '@media (hover: none)': {
-        backgroundColor,
-      },
-    },
-    [`&.${filledInputClasses.focused}`]: {
-      backgroundColor,
-    },
-    [`&.${filledInputClasses.disabled}`]: {
-      backgroundColor: light ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)',
-    },
-    ...(!ownerState.disableUnderline && {
-      '&:after': {
-        borderBottom: `2px solid ${theme.palette[ownerState.color].main}`,
-        left: 0,
-        bottom: 0,
-        // Doing the other way around crash on IE11 "''" https://github.com/cssinjs/jss/issues/242
-        content: '""',
-        position: 'absolute',
-        right: 0,
-        transform: 'scaleX(0)',
-        transition: theme.transitions.create('transform', {
-          duration: theme.transitions.duration.shorter,
-          easing: theme.transitions.easing.easeOut,
-        }),
-        pointerEvents: 'none', // Transparent to the hover style.
-      },
-      [`&.${filledInputClasses.focused}:after`]: {
-        transform: 'scaleX(1)',
-      },
-      [`&.${filledInputClasses.error}:after`]: {
-        borderBottomColor: theme.palette.error.main,
-        transform: 'scaleX(1)', // error is always underlined in red
-      },
-      '&:before': {
-        borderBottom: `1px solid ${bottomLineColor}`,
-        left: 0,
-        bottom: 0,
-        // Doing the other way around crash on IE11 "''" https://github.com/cssinjs/jss/issues/242
-        content: '"\\00a0"',
-        position: 'absolute',
-        right: 0,
-        transition: theme.transitions.create('border-bottom-color', {
-          duration: theme.transitions.duration.shorter,
-        }),
-        pointerEvents: 'none', // Transparent to the hover style.
-      },
-      [`&:hover:not(.${filledInputClasses.disabled}):before`]: {
-        borderBottom: `1px solid ${theme.palette.text.primary}`,
-      },
-      [`&.${filledInputClasses.disabled}:before`]: {
-        borderBottomStyle: 'dotted',
-      },
-    }),
-    ...(ownerState.startAdornment && {
-      paddingLeft: 12,
-    }),
-    ...(ownerState.endAdornment && {
-      paddingRight: 12,
-    }),
-    ...(ownerState.multiline && {
-      padding: '25px 12px 8px',
-      ...(ownerState.size === 'small' && {
-        paddingTop: 21,
-        paddingBottom: 4,
+})(
+  memoTheme(({ theme }) => {
+    const light = theme.palette.mode === 'light';
+    const bottomLineColor = light ? 'rgba(0, 0, 0, 0.42)' : 'rgba(255, 255, 255, 0.7)';
+    const backgroundColor = light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.09)';
+    const hoverBackground = light ? 'rgba(0, 0, 0, 0.09)' : 'rgba(255, 255, 255, 0.13)';
+    const disabledBackground = light ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)';
+    return {
+      position: 'relative',
+      backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor,
+      borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+      borderTopRightRadius: (theme.vars || theme).shape.borderRadius,
+      ...getTransitionStyles(theme, 'background-color', {
+        duration: theme.transitions.duration.shorter,
+        easing: theme.transitions.easing.easeOut,
       }),
-      ...(ownerState.hiddenLabel && {
-        paddingTop: 16,
-        paddingBottom: 17,
-      }),
-    }),
-  };
-});
+      '&:hover': {
+        backgroundColor: theme.vars ? theme.vars.palette.FilledInput.hoverBg : hoverBackground,
+        // Reset on touch devices, it doesn't add specificity
+        '@media (hover: none)': {
+          backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor,
+        },
+      },
+      [`&.${filledInputClasses.focused}`]: {
+        backgroundColor: theme.vars ? theme.vars.palette.FilledInput.bg : backgroundColor,
+      },
+      [`&.${filledInputClasses.disabled}`]: {
+        backgroundColor: theme.vars
+          ? theme.vars.palette.FilledInput.disabledBg
+          : disabledBackground,
+      },
+      variants: [
+        {
+          props: ({ ownerState }) => !ownerState.disableUnderline,
+          style: {
+            '&::after': {
+              left: 0,
+              bottom: 0,
+              content: '""',
+              position: 'absolute',
+              right: 0,
+              transform: 'scaleX(0)',
+              ...getTransitionStyles(theme, 'transform', {
+                duration: theme.transitions.duration.shorter,
+                easing: theme.transitions.easing.easeOut,
+              }),
+              pointerEvents: 'none', // Transparent to the hover style.
+            },
+            [`&.${filledInputClasses.focused}:after`]: {
+              // translateX(0) is a workaround for Safari transform scale bug
+              // See https://github.com/mui/material-ui/issues/31766
+              transform: 'scaleX(1) translateX(0)',
+            },
+            [`&.${filledInputClasses.error}`]: {
+              '&::before, &::after': {
+                borderBottomColor: (theme.vars || theme).palette.error.main,
+              },
+            },
+            '&::before': {
+              borderBottom: `1px solid ${
+                theme.vars
+                  ? theme.alpha(
+                      theme.vars.palette.common.onBackground,
+                      theme.vars.opacity.inputUnderline,
+                    )
+                  : bottomLineColor
+              }`,
+              left: 0,
+              bottom: 0,
+              content: '""',
+              position: 'absolute',
+              right: 0,
+              ...getTransitionStyles(theme, 'border-bottom-color', {
+                duration: theme.transitions.duration.shorter,
+              }),
+              pointerEvents: 'none', // Transparent to the hover style.
+            },
+            [`&:hover:not(.${filledInputClasses.disabled}, .${filledInputClasses.error}):before`]: {
+              borderBottom: `1px solid ${(theme.vars || theme).palette.text.primary}`,
+            },
+            [`&.${filledInputClasses.disabled}:before`]: {
+              borderBottomStyle: 'dotted',
+            },
+          },
+        },
+        ...Object.entries(theme.palette)
+          .filter(createSimplePaletteValueFilter()) // check all the used fields in the style below
+          .map(([color]) => ({
+            props: {
+              disableUnderline: false,
+              color,
+            },
+            style: {
+              '&::after': {
+                borderBottom: `2px solid ${(theme.vars || theme).palette[color]?.main}`,
+              },
+            },
+          })),
+        {
+          props: ({ ownerState }) => ownerState.startAdornment,
+          style: {
+            paddingLeft: 12,
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.endAdornment,
+          style: {
+            // use CSS variable to keep specificity
+            '--_trailingPad': '12px',
+            paddingRight: 'var(--_trailingPad)',
+            [`&.${selectClasses.root}`]: {
+              '--_trailingPad': '0px',
+            },
+          },
+        },
+      ],
+    };
+  }),
+);
 
 const FilledInputInput = styled(InputBaseInput, {
   name: 'MuiFilledInput',
   slot: 'Input',
   overridesResolver: inputBaseInputOverridesResolver,
-})(({ theme, ownerState }) => ({
-  paddingTop: 25,
-  paddingRight: 12,
-  paddingBottom: 8,
-  paddingLeft: 12,
-  '&:-webkit-autofill': {
-    WebkitBoxShadow: theme.palette.mode === 'light' ? null : '0 0 0 100px #266798 inset',
-    WebkitTextFillColor: theme.palette.mode === 'light' ? null : '#fff',
-    caretColor: theme.palette.mode === 'light' ? null : '#fff',
-    borderTopLeftRadius: 'inherit',
-    borderTopRightRadius: 'inherit',
-  },
-  ...(ownerState.size === 'small' && {
-    paddingTop: 21,
-    paddingBottom: 4,
-  }),
-  ...(ownerState.hiddenLabel && {
-    paddingTop: 16,
-    paddingBottom: 17,
-  }),
-  ...(ownerState.multiline && {
-    paddingTop: 0,
-    paddingBottom: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-  }),
-  ...(ownerState.startAdornment && {
-    paddingLeft: 0,
-  }),
-  ...(ownerState.endAdornment && {
-    paddingRight: 0,
-  }),
-  ...(ownerState.hiddenLabel &&
-    ownerState.size === 'small' && {
-      paddingTop: 8,
-      paddingBottom: 9,
-    }),
-}));
+})(
+  memoTheme(({ theme }) => ({
+    paddingTop: 25,
+    paddingRight: 12,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    '&:-webkit-autofill': {
+      ...(!theme.vars && {
+        WebkitBoxShadow: theme.palette.mode === 'light' ? null : '0 0 0 100px #266798 inset',
+        WebkitTextFillColor: theme.palette.mode === 'light' ? null : '#fff',
+        caretColor: theme.palette.mode === 'light' ? null : '#fff',
+      }),
+      borderTopLeftRadius: 'inherit',
+      borderTopRightRadius: 'inherit',
+      ...(theme.vars && {
+        WebkitBoxShadow: theme.vars.palette.Input.autofillWebkitBoxShadow,
+        ...theme.applyStyles('dark', {
+          WebkitTextFillColor: '#fff',
+          caretColor: '#fff',
+        }),
+      }),
+    },
+    variants: [
+      {
+        props: {
+          size: 'small',
+        },
+        style: {
+          paddingTop: 21,
+          paddingBottom: 4,
+        },
+      },
+      {
+        props: ({ ownerState }) => ownerState.hiddenLabel,
+        style: {
+          paddingTop: 16,
+          paddingBottom: 17,
+        },
+      },
+      {
+        props: ({ ownerState }) => ownerState.startAdornment,
+        style: {
+          paddingLeft: 0,
+        },
+      },
+      {
+        props: ({ ownerState }) => ownerState.endAdornment,
+        style: {
+          paddingRight: 0,
+        },
+      },
+      {
+        props: ({ ownerState }) => ownerState.hiddenLabel && ownerState.size === 'small',
+        style: {
+          paddingTop: 8,
+          paddingBottom: 9,
+        },
+      },
+    ],
+  })),
+);
 
 const FilledInput = React.forwardRef(function FilledInput(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiFilledInput' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiFilledInput' });
 
   const {
-    disableUnderline,
-    components = {},
-    componentsProps: componentsPropsProp,
+    disableUnderline = false,
     fullWidth = false,
     hiddenLabel, // declare here to prevent spreading to DOM
     inputComponent = 'input',
     multiline = false,
+    notched, // declare here to prevent spreading to DOM
+    slotProps,
+    slots = {},
     type = 'text',
     ...other
   } = props;
 
   const ownerState = {
     ...props,
+    disableUnderline,
     fullWidth,
     inputComponent,
     multiline,
@@ -198,16 +271,20 @@ const FilledInput = React.forwardRef(function FilledInput(inProps, ref) {
   const classes = useUtilityClasses(props);
   const filledInputComponentsProps = { root: { ownerState }, input: { ownerState } };
 
-  const componentsProps = componentsPropsProp
-    ? deepmerge(componentsPropsProp, filledInputComponentsProps)
+  const componentsProps = slotProps
+    ? deepmerge(filledInputComponentsProps, slotProps)
     : filledInputComponentsProps;
+
+  const RootSlot = slots.root ?? FilledInputRoot;
+  const InputSlot = slots.input ?? FilledInputInput;
 
   return (
     <InputBase
-      components={{ Root: FilledInputRoot, Input: FilledInputInput, ...components }}
-      componentsProps={componentsProps}
+      slots={{ root: RootSlot, input: InputSlot }}
+      slotProps={componentsProps}
       fullWidth={fullWidth}
       inputComponent={inputComponent}
+      internalDisabledThemeFocusVisible={!disableUnderline}
       multiline={multiline}
       ref={ref}
       type={type}
@@ -218,10 +295,10 @@ const FilledInput = React.forwardRef(function FilledInput(inProps, ref) {
 });
 
 FilledInput.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * This prop helps users to fill forms faster, especially on mobile devices.
    * The name can be confusing, as it's more like an autofill.
@@ -237,27 +314,15 @@ FilledInput.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * The color of the component. It supports those theme colors that make sense for this component.
+   * The color of the component.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
    * The prop defaults to the value (`'primary'`) inherited from the parent FormControl component.
    */
   color: PropTypes /* @typescript-to-proptypes-ignore */.oneOfType([
     PropTypes.oneOf(['primary', 'secondary']),
     PropTypes.string,
   ]),
-  /**
-   * The components used for each slot inside the InputBase.
-   * Either a string to use a HTML element or a component.
-   * @default {}
-   */
-  components: PropTypes.shape({
-    Input: PropTypes.elementType,
-    Root: PropTypes.elementType,
-  }),
-  /**
-   * The props used for each slot inside the Input.
-   * @default {}
-   */
-  componentsProps: PropTypes.object,
   /**
    * The default value. Use when the component is not controlled.
    */
@@ -269,6 +334,7 @@ FilledInput.propTypes /* remove-proptypes */ = {
   disabled: PropTypes.bool,
   /**
    * If `true`, the input will not have an underline.
+   * @default false
    */
   disableUnderline: PropTypes.bool,
   /**
@@ -303,7 +369,7 @@ FilledInput.propTypes /* remove-proptypes */ = {
    */
   inputComponent: PropTypes.elementType,
   /**
-   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
+   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#attributes) applied to the `input` element.
    * @default {}
    */
   inputProps: PropTypes.object,
@@ -326,7 +392,7 @@ FilledInput.propTypes /* remove-proptypes */ = {
    */
   minRows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   /**
-   * If `true`, a `textarea` element is rendered.
+   * If `true`, a [TextareaAutosize](https://mui.com/material-ui/react-textarea-autosize/) element is rendered.
    * @default false
    */
   multiline: PropTypes.bool,
@@ -334,6 +400,10 @@ FilledInput.propTypes /* remove-proptypes */ = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @internal
+   */
+  notched: PropTypes.bool,
   /**
    * Callback fired when the value is changed.
    *
@@ -360,15 +430,38 @@ FilledInput.propTypes /* remove-proptypes */ = {
    */
   rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   /**
+   * The extra props for the slot components.
+   * You can override the existing props or add new ones.
+   *
+   * @default {}
+   */
+  slotProps: PropTypes.shape({
+    input: PropTypes.object,
+    root: PropTypes.object,
+  }),
+  /**
+   * The components used for each slot inside.
+   *
+   * @default {}
+   */
+  slots: PropTypes.shape({
+    input: PropTypes.elementType,
+    root: PropTypes.elementType,
+  }),
+  /**
    * Start `InputAdornment` for this component.
    */
   startAdornment: PropTypes.node,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
-   * Type of the `input` element. It should be [a valid HTML5 input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Form_%3Cinput%3E_types).
+   * Type of the `input` element. It should be [a valid HTML5 input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types).
    * @default 'text'
    */
   type: PropTypes.string,

@@ -1,8 +1,11 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import styled, { rootShouldForwardProp } from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import clsx from 'clsx';
+import composeClasses from '@mui/utils/composeClasses';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import Typography from '../Typography';
 import { getDialogContentTextUtilityClass } from './dialogContentTextClasses';
 
@@ -25,21 +28,21 @@ const DialogContentTextRoot = styled(Typography, {
   shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === 'classes',
   name: 'MuiDialogContentText',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
 })({});
 
 const DialogContentText = React.forwardRef(function DialogContentText(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiDialogContentText' });
-  const { children, ...ownerState } = props;
+  const props = useDefaultProps({ props: inProps, name: 'MuiDialogContentText' });
+  const { children, className, ...ownerState } = props;
   const classes = useUtilityClasses(ownerState);
 
   return (
     <DialogContentTextRoot
       component="p"
       variant="body1"
-      color="text.secondary"
+      color="textSecondary"
       ref={ref}
       ownerState={ownerState}
+      className={clsx(classes.root, className)}
       {...props}
       classes={classes}
     />
@@ -47,10 +50,10 @@ const DialogContentText = React.forwardRef(function DialogContentText(inProps, r
 });
 
 DialogContentText.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -60,9 +63,17 @@ DialogContentText.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
+   * A CSS class name applied to the root element.
+   */
+  className: PropTypes.string,
+  /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default DialogContentText;

@@ -1,16 +1,14 @@
-// @ts-check
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import Tab from '@mui/material/Tab';
 import Tabs, { tabsClasses as classes } from '@mui/material/Tabs';
 import TabList from './TabList';
 import TabContext from '../TabContext';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TabList />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
-  // @ts-ignore mui name does not exist for this component
   describeConformance(<TabList />, () => ({
     classes,
     inheritComponent: Tabs,
@@ -18,26 +16,14 @@ describe('<TabList />', () => {
      * @param {React.ReactNode} node
      */
     render: (node) => render(<TabContext value="0">{node}</TabContext>),
-    wrapMount: (mount) => (node) => {
-      const wrapper = mount(<TabContext value="0">{node}</TabContext>);
-      return wrapper.childAt(0);
-    },
     refInstanceof: window.HTMLDivElement,
-    // TODO: no idea why reactTestRenderer fails
-    skip: [
-      'componentsProp',
-      'themeDefaultProps',
-      'themeStyleOverrides',
-      'themeVariants',
-      'rootClass',
-      'reactTestRenderer',
-    ],
+    skip: ['themeDefaultProps', 'themeStyleOverrides', 'themeVariants', 'rootClass'],
   }));
 
   // outside of TabContext pass every test in Tabs
 
   it('provides the active value to Tab so that they can be indicated as selected', () => {
-    const { getAllByRole } = render(
+    render(
       <TabContext value="0">
         <TabList>
           <Tab value="0" />
@@ -45,7 +31,8 @@ describe('<TabList />', () => {
         </TabList>
       </TabContext>,
     );
-    const [tabOne, tabTwo] = getAllByRole('tab');
+
+    const [tabOne, tabTwo] = screen.getAllByRole('tab');
 
     expect(tabOne).to.have.attribute('aria-selected', 'true');
     expect(tabTwo).to.have.attribute('aria-selected', 'false');

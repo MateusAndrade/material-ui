@@ -1,18 +1,21 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { deepmerge } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import deepmerge from '@mui/utils/deepmerge';
+import composeClasses from '@mui/utils/composeClasses';
+import getReactElementRef from '@mui/utils/getReactElementRef';
 import SelectInput from './SelectInput';
-import formControlState from '../FormControl/formControlState';
-import useFormControl from '../FormControl/useFormControl';
+import { useFormControlState } from '../FormControl/useFormControl';
 import ArrowDropDownIcon from '../internal/svg-icons/ArrowDropDown';
 import Input from '../Input';
 import NativeSelectInput from '../NativeSelect/NativeSelectInput';
 import FilledInput from '../FilledInput';
 import OutlinedInput from '../OutlinedInput';
-import useThemeProps from '../styles/useThemeProps';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import useForkRef from '../utils/useForkRef';
+import { styled } from '../zero-styled';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
 import { getSelectUtilityClasses } from './selectClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -22,16 +25,31 @@ const useUtilityClasses = (ownerState) => {
     root: ['root'],
   };
 
-  return composeClasses(slots, getSelectUtilityClasses, classes);
+  const composedClasses = composeClasses(slots, getSelectUtilityClasses, classes);
+
+  return { ...classes, ...composedClasses };
 };
 
+const styledRootConfig = {
+  name: 'MuiSelect',
+  slot: 'Root',
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) && prop !== 'variant',
+};
+
+const StyledInput = styled(Input, styledRootConfig)('');
+
+const StyledOutlinedInput = styled(OutlinedInput, styledRootConfig)('');
+
+const StyledFilledInput = styled(FilledInput, styledRootConfig)('');
+
 const Select = React.forwardRef(function Select(inProps, ref) {
-  const props = useThemeProps({ name: 'MuiSelect', props: inProps });
+  const props = useDefaultProps({ name: 'MuiSelect', props: inProps });
   const {
     autoWidth = false,
     children,
     classes: classesProp = {},
     className,
+    defaultOpen = false,
     displayEmpty = false,
     IconComponent = ArrowDropDownIcon,
     id,
@@ -47,74 +65,82 @@ const Select = React.forwardRef(function Select(inProps, ref) {
     open,
     renderValue,
     SelectDisplayProps,
-    variant: variantProps = 'outlined',
+    variant: variantProp = 'outlined',
     ...other
   } = props;
 
   const inputComponent = native ? NativeSelectInput : SelectInput;
 
-  const muiFormControl = useFormControl();
-  const fcs = formControlState({
+  const [fcs] = useFormControlState({
     props,
-    muiFormControl,
-    states: ['variant'],
+    states: ['variant', 'error'],
   });
 
-  const variant = fcs.variant || variantProps;
+  const variant = fcs.variant || variantProp;
+
+  const ownerState = { ...props, variant, classes: classesProp };
+  const classes = useUtilityClasses(ownerState);
+  const { root, ...restOfClasses } = classes;
 
   const InputComponent =
     input ||
     {
-      standard: <Input />,
-      outlined: <OutlinedInput label={label} />,
-      filled: <FilledInput />,
+      standard: <StyledInput ownerState={ownerState} />,
+      outlined: <StyledOutlinedInput label={label} ownerState={ownerState} />,
+      filled: <StyledFilledInput ownerState={ownerState} />,
     }[variant];
 
-  const ownerState = { ...props, classes: classesProp };
-  const classes = useUtilityClasses(ownerState);
-  const { root, ...otherClasses } = classesProp;
+  const inputComponentRef = useForkRef(ref, getReactElementRef(InputComponent));
 
-  const inputComponentRef = useForkRef(ref, InputComponent.ref);
-
-  return React.cloneElement(InputComponent, {
-    // Most of the logic is implemented in `SelectInput`.
-    // The `Select` component is a simple API wrapper to expose something better to play with.
-    inputComponent,
-    inputProps: {
-      children,
-      IconComponent,
-      variant,
-      type: undefined, // We render a select. We can ignore the type provided by the `Input`.
-      multiple,
-      ...(native
-        ? { id }
-        : {
-            autoWidth,
-            displayEmpty,
-            labelId,
-            MenuProps,
-            onClose,
-            onOpen,
-            open,
-            renderValue,
-            SelectDisplayProps: { id, ...SelectDisplayProps },
-          }),
-      ...inputProps,
-      classes: inputProps ? deepmerge(otherClasses, inputProps.classes) : otherClasses,
-      ...(input ? input.props.inputProps : {}),
-    },
-    ...(multiple && native && variant === 'outlined' ? { notched: true } : {}),
-    ref: inputComponentRef,
-    className: clsx(classes.root, InputComponent.props.className, className),
-    ...other,
-  });
+  return (
+    <React.Fragment>
+      {React.cloneElement(InputComponent, {
+        // Most of the logic is implemented in `SelectInput`.
+        // The `Select` component is a simple API wrapper to expose something better to play with.
+        inputComponent,
+        inputProps: {
+          children,
+          error: fcs.error,
+          IconComponent,
+          variant,
+          type: undefined, // We render a select. We can ignore the type provided by the `Input`.
+          multiple,
+          ...(native
+            ? { id }
+            : {
+                autoWidth,
+                defaultOpen,
+                displayEmpty,
+                labelId,
+                MenuProps,
+                onClose,
+                onOpen,
+                open,
+                renderValue,
+                SelectDisplayProps: { id, ...SelectDisplayProps },
+              }),
+          ...inputProps,
+          classes: inputProps ? deepmerge(restOfClasses, inputProps.classes) : restOfClasses,
+          ...(input ? input.props.inputProps : {}),
+        },
+        ...(((multiple && native) || displayEmpty) && variant === 'outlined'
+          ? { notched: true }
+          : {}),
+        ref: inputComponentRef,
+        className: clsx(InputComponent.props.className, className, classes.root),
+        // If a custom input is provided via 'input' prop, do not allow 'variant' to be propagated to it's root element. See https://github.com/mui/material-ui/issues/33894.
+        ...(!input && { variant }),
+        ...other,
+      })}
+    </React.Fragment>
+  );
 });
 
 Select.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * If `true`, the width of the popover will automatically be set according to the items inside the
    * menu, otherwise it will be at least the width of the select input.
@@ -133,10 +159,13 @@ Select.propTypes /* remove-proptypes */ = {
    * @default {}
    */
   classes: PropTypes.object,
-  /**
-   * @ignore
-   */
   className: PropTypes.string,
+  /**
+   * If `true`, the component is initially open. Use when the component open state is not controlled (i.e. the `open` prop is not defined).
+   * You can only use it when the `native` prop is `false` (default).
+   * @default false
+   */
+  defaultOpen: PropTypes.bool,
   /**
    * The default value. Use when the component is not controlled.
    */
@@ -166,12 +195,12 @@ Select.propTypes /* remove-proptypes */ = {
    */
   input: PropTypes.element,
   /**
-   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
+   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#attributes) applied to the `input` element.
    * When `native` is `true`, the attributes are applied on the `select` element.
    */
   inputProps: PropTypes.object,
   /**
-   * See [OutlinedInput#label](/api/outlined-input/#props)
+   * See [OutlinedInput#label](https://mui.com/material-ui/api/outlined-input/#props)
    */
   label: PropTypes.node,
   /**
@@ -180,7 +209,7 @@ Select.propTypes /* remove-proptypes */ = {
    */
   labelId: PropTypes.string,
   /**
-   * Props applied to the [`Menu`](/api/menu/) element.
+   * Props applied to the [`Menu`](https://mui.com/material-ui/api/menu/) element.
    */
   MenuProps: PropTypes.object,
   /**
@@ -196,22 +225,22 @@ Select.propTypes /* remove-proptypes */ = {
   /**
    * Callback fired when a menu item is selected.
    *
-   * @param {SelectChangeEvent<T>} event The event source of the callback.
+   * @param {SelectChangeEvent<Value>} event The event source of the callback.
    * You can pull out the new value by accessing `event.target.value` (any).
-   * **Warning**: This is a generic event not a change event unless the change event is caused by browser autofill.
+   * **Warning**: This is a generic event, not a change event, unless the change event is caused by browser autofill.
    * @param {object} [child] The react element that was selected when `native` is `false` (default).
    */
   onChange: PropTypes.func,
   /**
    * Callback fired when the component requests to be closed.
-   * Use in controlled mode (see open).
+   * Use it in either controlled (see the `open` prop), or uncontrolled mode (to detect when the Select collapses).
    *
    * @param {object} event The event source of the callback.
    */
   onClose: PropTypes.func,
   /**
    * Callback fired when the component requests to be opened.
-   * Use in controlled mode (see open).
+   * Use it in either controlled (see the `open` prop), or uncontrolled mode (to detect when the Select expands).
    *
    * @param {object} event The event source of the callback.
    */
@@ -236,7 +265,11 @@ Select.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The `input` value. Providing an empty string will select no options.
    * Set to an empty string `''` if you don't want any of the available options to be selected.
@@ -244,7 +277,7 @@ Select.propTypes /* remove-proptypes */ = {
    * If the value is an object it must have reference equality with the option in order to be selected.
    * If the value is not an object, the string representation must match with the string representation of the option in order to be selected.
    */
-  value: PropTypes.any,
+  value: PropTypes.oneOfType([PropTypes.oneOf(['']), PropTypes.any]),
   /**
    * The variant to use.
    * @default 'outlined'

@@ -1,4 +1,4 @@
-import * as React from 'react';
+'use client';
 import { createSvgIcon } from '@mui/material/utils';
 
 /**

@@ -1,65 +1,71 @@
-import * as React from 'react';
 import { useInView } from 'react-intersection-observer';
-import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import AddRounded from '@mui/icons-material/AddRounded';
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
 import SponsorCard from 'docs/src/components/home/SponsorCard';
-import Link from 'docs/src/modules/components/Link';
-import ROUTES from 'docs/src/route';
+import BacklinkSponsor from 'docs/src/components/home/BacklinkSponsor';
+import { Link } from '@mui/internal-core-docs/Link';
+import { ROUTES } from '@mui/internal-core-docs/constants';
 
 const GOLDs = [
   {
     src: '/static/sponsors/tidelift.svg',
-    srcSet: '/static/sponsors/tidelift.svg',
     name: 'Tidelift',
     description: 'Enterprise-ready open-source software.',
-    // Tidelift requests this format.
-    href: 'https://tidelift.com/?utm_source=npm-material-ui&utm_medium=referral&utm_campaign=homepage',
+    href: 'https://tidelift.com/',
   },
   {
-    src: 'https://avatars.githubusercontent.com/u/24789812?size=40',
-    srcSet: 'https://avatars.githubusercontent.com/u/24789812?size=80 2x',
-    name: 'Bit',
-    description: 'The fastest way to share code.',
-    href: 'https://bit.dev/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    src: 'https://images.opencollective.com/dialmycalls/f5ae9ab/avatar/40.png',
+    srcSet: 'https://images.opencollective.com/dialmycalls/f5ae9ab/avatar/120.png 3x',
+    name: 'DialMyCalls',
+    description: 'Send text messages, calls, and emails.',
+    href: 'https://www.dialmycalls.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
+  },
+];
+
+const BACKLINKs = [
+  {
+    name: 'Goread.io',
+    description: 'Instagram followers, likes, views, and comments.',
+    href: 'https://goread.io/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
   },
   {
-    src: 'https://images.opencollective.com/callemall/a6946da/logo/40.png',
-    srcSet: 'https://images.opencollective.com/callemall/a6946da/logo/80.png 2x',
-    name: 'Text-em-all',
-    description: 'The easy way to message your group.',
-    href: 'https://www.text-em-all.com/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    name: 'Poprey',
+    description: 'Buy Instagram likes with crypto.',
+    href: 'https://poprey.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
   },
   {
-    src: 'https://avatars.githubusercontent.com/u/13365608?s=40',
-    srcSet: 'https://avatars.githubusercontent.com/u/13365608?s=80 2x',
-    name: 'Spice Factory',
-    description: 'Next gen digital product studio.',
-    href: 'https://spicefactory.co/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    name: 'SocialWick',
+    description: 'Buy Instagram followers.',
+    href: 'https://www.socialwick.com/instagram/followers',
   },
   {
-    src: '/static/sponsors/elevator-logo.png',
-    srcSet: '/static/sponsors/elevator-logo-2x.png 2x',
-    name: 'Elevator',
-    description: 'The dopest new hip hop, upcoming artists, music.',
-    href: 'https://www.elevatormag.com/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    name: 'Follower24',
+    description: 'Social media success.',
+    href: 'https://www.follower24.de/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
   },
   {
-    src: 'https://images.opencollective.com/movavi-software/a1d0167/logo/40.png',
-    srcSet: 'https://images.opencollective.com/movavi-software/a1d0167/logo/80.png 2x',
-    name: 'Movavi',
-    description: 'Screen recorder for Mac.',
-    href: 'https://www.movavi.com/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    name: 'Views4You',
+    description: 'Maximize Social Media Impact.',
+    href: 'https://views4you.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
   },
   {
-    src: '/static/sponsors/hoodie-bees.png',
-    srcSet: '/static/sponsors/hoodie-bees-2x.png',
-    name: 'Hoodie Bees',
-    description: 'Horse community.',
-    href: 'https://www.hoodiebees.com/?utm_source=MUI&utm_medium=referral&utm_content=homepage',
+    name: 'InstantFamous',
+    description: 'Grow Your Social Network.',
+    href: 'https://instant-famous.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
+  },
+  {
+    name: 'TokBoostly',
+    description: 'Premium TikTok Growth.',
+    href: 'https://tokboostly.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
+  },
+  {
+    name: 'SocialBoosting',
+    description: 'Instagram & TikTok followers, likes, views.',
+    href: 'https://www.socialboosting.com/?utm_source=mui.com&utm_medium=referral&utm_content=homepage',
   },
 ];
 
@@ -70,72 +76,80 @@ export default function GoldSponsors() {
     rootMargin: '500px',
   });
   return (
-    <Box ref={ref}>
-      <Box sx={{ mb: 2 }}>
-        <Typography
-          component="h3"
-          variant="h5"
-          fontWeight="extraBold"
-          sx={{
-            color: (theme) =>
-              theme.palette.mode === 'dark'
-                ? theme.palette.warning[500]
-                : theme.palette.warning[800],
-          }}
-        >
-          Gold
-        </Typography>
-      </Box>
-      <Grid container spacing={{ xs: 2, md: 4 }}>
+    <div ref={ref}>
+      <Typography
+        component="h3"
+        variant="h6"
+        sx={[
+          {
+            fontWeight: 'semiBold',
+          },
+          (theme) => ({
+            mt: 4,
+            mb: 1.5,
+            background: `linear-gradient(90deg, ${(theme.vars || theme).palette.warning[500]} 50%, ${
+              (theme.vars || theme).palette.warning[700]
+            } 100%)`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            ...theme.applyDarkStyles({
+              background: `linear-gradient(90deg, ${
+                (theme.vars || theme).palette.warning[400]
+              } 50%, ${(theme.vars || theme).palette.warning[700]} 100%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }),
+          }),
+        ]}
+      >
+        Gold
+      </Typography>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {GOLDs.map((item) => (
-          <Grid item key={item.name} xs={12} sm={6} md={4} lg={3}>
+          <Grid key={item.name} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <SponsorCard inView={inView} item={item} />
           </Grid>
         ))}
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Paper
             variant="outlined"
             sx={{
               p: 2,
+              height: '100%',
               display: 'flex',
               alignItems: 'center',
-              height: '100%',
+              gap: 2,
               borderStyle: 'dashed',
-              borderColor: (theme) =>
-                theme.palette.mode === 'dark' ? 'primaryDark.400' : 'grey.300',
             }}
           >
             <IconButton
-              aria-label="Become MUI sponsor"
+              aria-label="Sponsor MUI"
               component="a"
               href={ROUTES.goldSponsor}
               target="_blank"
-              rel="noopener noreferrer"
               color="primary"
-              sx={{
-                mr: 2,
-                border: '1px solid',
-                borderColor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'primaryDark.400' : 'grey.300',
-              }}
             >
               <AddRounded />
             </IconButton>
             <div>
-              <Typography variant="body2" color="text.primary" fontWeight="bold">
-                Become our sponsor!
+              <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 'semiBold' }}>
+                Become a sponsor
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                To join us,{' '}
-                <Link href={ROUTES.goldSponsor} target="_blank" rel="noopener noreferrer">
-                  choose how
-                </Link>{' '}
-                you want to contribute.
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Find out how{' '}
+                <Link href={ROUTES.goldSponsor} target="_blank">
+                  you can support MUI.
+                </Link>
               </Typography>
             </div>
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+      <Box sx={{ maxWidth: 1000, mt: { xs: 2, md: 3 } }}>
+        {BACKLINKs.map((item, index) => (
+          <BacklinkSponsor key={index} item={item} />
+        ))}
+      </Box>
+    </div>
   );
 }

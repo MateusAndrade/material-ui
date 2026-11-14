@@ -1,9 +1,10 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import ListContext from './ListContext';
 import { getListUtilityClass } from './listClasses';
 
@@ -30,22 +31,31 @@ const ListRoot = styled('ul', {
       ownerState.subheader && styles.subheader,
     ];
   },
-})(({ ownerState }) => ({
+})({
   listStyle: 'none',
   margin: 0,
   padding: 0,
   position: 'relative',
-  ...(!ownerState.disablePadding && {
-    paddingTop: 8,
-    paddingBottom: 8,
-  }),
-  ...(ownerState.subheader && {
-    paddingTop: 0,
-  }),
-}));
+  variants: [
+    {
+      props: ({ ownerState }) => !ownerState.disablePadding,
+      style: {
+        paddingTop: 8,
+        paddingBottom: 8,
+      },
+    },
+    {
+      props: ({ ownerState }) => ownerState.subheader,
+      style: {
+        paddingTop: 0,
+        isolation: 'isolate', // Prevent overlap with iOS overlay scrollbars.
+      },
+    },
+  ],
+});
 
 const List = React.forwardRef(function List(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiList' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiList' });
   const {
     children,
     className,
@@ -84,10 +94,10 @@ const List = React.forwardRef(function List(inProps, ref) {
 });
 
 List.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -97,7 +107,7 @@ List.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -124,7 +134,11 @@ List.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default List;

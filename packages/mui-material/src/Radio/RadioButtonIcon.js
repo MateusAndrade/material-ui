@@ -1,36 +1,51 @@
-import * as React from 'react';
+'use client';
 import PropTypes from 'prop-types';
 import RadioButtonUncheckedIcon from '../internal/svg-icons/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '../internal/svg-icons/RadioButtonChecked';
-import styled from '../styles/styled';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { getTransitionStyles } from '../transitions/utils';
 
-const RadioButtonIconRoot = styled('span')({
+const RadioButtonIconRoot = styled('span', {
+  name: 'MuiRadioButtonIcon',
+  shouldForwardProp: rootShouldForwardProp,
+})({
   position: 'relative',
   display: 'flex',
 });
 
-const RadioButtonIconBackground = styled(RadioButtonUncheckedIcon, { skipSx: true })({
+const RadioButtonIconBackground = styled(RadioButtonUncheckedIcon, {
+  name: 'MuiRadioButtonIcon',
+})({
   // Scale applied to prevent dot misalignment in Safari
   transform: 'scale(1)',
 });
 
-const RadioButtonIconDot = styled(RadioButtonCheckedIcon, { skipSx: true })(
-  ({ theme, ownerState }) => ({
+const RadioButtonIconDot = styled(RadioButtonCheckedIcon, {
+  name: 'MuiRadioButtonIcon',
+})(
+  memoTheme(({ theme }) => ({
     left: 0,
     position: 'absolute',
     transform: 'scale(0)',
-    transition: theme.transitions.create('transform', {
+    ...getTransitionStyles(theme, 'transform', {
       easing: theme.transitions.easing.easeIn,
       duration: theme.transitions.duration.shortest,
     }),
-    ...(ownerState.checked && {
-      transform: 'scale(1)',
-      transition: theme.transitions.create('transform', {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.shortest,
-      }),
-    }),
-  }),
+    variants: [
+      {
+        props: { checked: true },
+        style: {
+          transform: 'scale(1)',
+          ...getTransitionStyles(theme, 'transform', {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.shortest,
+          }),
+        },
+      },
+    ],
+  })),
 );
 
 /**
@@ -53,14 +68,13 @@ function RadioButtonIcon(props) {
   );
 }
 
-RadioButtonIcon.propTypes = {
+RadioButtonIcon.propTypes /* remove-proptypes */ = {
   /**
    * If `true`, the component is checked.
    */
   checked: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
-   * See [CSS API](#css) below for more details.
    */
   classes: PropTypes.object,
   /**

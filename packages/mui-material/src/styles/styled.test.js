@@ -1,12 +1,12 @@
+import { describe, it, expect, beforeAll } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, screen } from 'test/utils';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import createTheme from './createTheme';
 import styled from './styled';
 import ThemeProvider from './ThemeProvider';
 
 describe('styled', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   it('should work', () => {
     const Div = styled('div')`
@@ -138,7 +138,7 @@ describe('styled', () => {
      */
     let TestObj;
 
-    before(() => {
+    beforeAll(() => {
       theme = createTheme({
         palette: {
           primary: {
@@ -168,10 +168,10 @@ describe('styled', () => {
         },
       });
 
-      const testOverridesResolver = (props, styles) => ({
-        ...styles.root,
-        ...(props.variant && styles[props.variant]),
-      });
+      const testOverridesResolver = (props, styles) => [
+        styles.root,
+        props.variant && styles[props.variant],
+      ];
 
       Test = styled('div', {
         shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'size' && prop !== 'sx',
@@ -197,7 +197,6 @@ describe('styled', () => {
       const CustomTest = styled('div', {
         name: 'MuiTest',
         slot: 'Rect',
-        overridesResolver: (props, styles) => styles.rect,
       })({
         width: '200px',
         height: '300px',
@@ -290,7 +289,6 @@ describe('styled', () => {
         shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'size' && prop !== 'sx',
         name: 'MuiTest',
         slot: 'Slot',
-        overridesResolver: (props, styles) => styles.slot,
       })`
         width: 200px;
         height: 300px;
@@ -315,7 +313,6 @@ describe('styled', () => {
         shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'size' && prop !== 'sx',
         name: 'MuiTest',
         slot: 'Slot',
-        overridesResolver: (props, styles) => styles.slot,
         skipVariantsResolver: false,
       })`
         width: 200px;
@@ -429,10 +426,10 @@ describe('styled', () => {
     });
 
     it('should respect the skipSx option', () => {
-      const testOverridesResolver = (props, styles) => ({
-        ...styles.root,
-        ...(props.variant && styles[props.variant]),
-      });
+      const testOverridesResolver = (props, styles) => [
+        styles.root,
+        props.variant && styles[props.variant],
+      ];
 
       const TestNoSx = styled('div', {
         shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'size' && prop !== 'sx',
@@ -514,11 +511,12 @@ describe('styled', () => {
       const { container } = render(<Component>Test</Component>);
 
       const classList = Array.from(container.firstChild.classList);
-      const regExp = new RegExp(`.*-MuiComponent-slot$`);
+      const regExp = /.*-MuiComponent-slot$/;
+      const regExpSC = /MuiComponent-slot-.*/;
       let containsValidClass = false;
 
       classList.forEach((className) => {
-        if (regExp.test(className)) {
+        if (regExp.test(className) || regExpSC.test(className)) {
           containsValidClass = true;
         }
       });
@@ -538,11 +536,12 @@ describe('styled', () => {
       const { container } = render(<Component>Test</Component>);
 
       const classList = Array.from(container.firstChild.classList);
-      const regExp = new RegExp(`.*-MuiComponent-root$`);
+      const regExp = /.*-MuiComponent-root$/;
+      const regExpSC = /MuiComponent-root.*/;
       let containsValidClass = false;
 
       classList.forEach((className) => {
-        if (regExp.test(className)) {
+        if (regExp.test(className) || regExpSC.test(className)) {
           containsValidClass = true;
         }
       });
@@ -562,12 +561,13 @@ describe('styled', () => {
         height: 300px;
       `;
 
-      const { getByTestId } = render(
+      render(
         <Component data-testid="root" classes={{ root: 'foo' }}>
           Test
         </Component>,
       );
-      expect(getByTestId('root').getAttribute('data-with-classes')).to.equal('false');
+
+      expect(screen.getByTestId('root').getAttribute('data-with-classes')).to.equal('false');
     });
 
     it('should propagate classes props to component if it is not a root slot', () => {
@@ -582,7 +582,7 @@ describe('styled', () => {
         height: 300px;
       `;
 
-      const { getByTestId } = render(
+      render(
         <React.Fragment>
           <Component data-testid="with-classes" classes={{ root: 'foo' }}>
             Test
@@ -591,8 +591,10 @@ describe('styled', () => {
         </React.Fragment>,
       );
 
-      expect(getByTestId('with-classes').getAttribute('data-with-classes')).to.equal('true');
-      expect(getByTestId('without-classes').getAttribute('data-with-classes')).to.equal('false');
+      expect(screen.getByTestId('with-classes').getAttribute('data-with-classes')).to.equal('true');
+      expect(screen.getByTestId('without-classes').getAttribute('data-with-classes')).to.equal(
+        'false',
+      );
     });
 
     it('should propagate classes props to component if no slot is specified', () => {
@@ -604,7 +606,7 @@ describe('styled', () => {
         height: 300px;
       `;
 
-      const { getByTestId } = render(
+      render(
         <React.Fragment>
           <Component data-testid="with-classes" classes={{ root: 'foo' }}>
             Test
@@ -613,12 +615,14 @@ describe('styled', () => {
         </React.Fragment>,
       );
 
-      expect(getByTestId('with-classes').getAttribute('data-with-classes')).to.equal('true');
-      expect(getByTestId('without-classes').getAttribute('data-with-classes')).to.equal('false');
+      expect(screen.getByTestId('with-classes').getAttribute('data-with-classes')).to.equal('true');
+      expect(screen.getByTestId('without-classes').getAttribute('data-with-classes')).to.equal(
+        'false',
+      );
     });
 
     it('classes props should be correctly applied to root and slot elements', () => {
-      const Child = (props) => {
+      function Child(props) {
         const { classes = {}, className, ...other } = props;
 
         return (
@@ -628,12 +632,12 @@ describe('styled', () => {
             {...other}
           />
         );
-      };
+      }
 
       const ParentRoot = styled('div', { name: 'MuiParent', slot: 'Root' })``;
       const ParentSlot = styled(Child, { name: 'MuiChild', slot: 'Slot' })``;
 
-      const Parent = (props) => {
+      function Parent(props) {
         const { classes = {}, className, ...other } = props;
 
         return (
@@ -646,7 +650,7 @@ describe('styled', () => {
             <ParentSlot classes={{ root: classes.slot }} />
           </ParentRoot>
         );
-      };
+      }
 
       const { container } = render(<Parent classes={{ root: 'root', slot: 'slot' }} />);
 

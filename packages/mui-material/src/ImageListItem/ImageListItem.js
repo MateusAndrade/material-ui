@@ -1,12 +1,13 @@
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { integerPropType } from '@mui/utils';
+'use client';
+import composeClasses from '@mui/utils/composeClasses';
+import integerPropType from '@mui/utils/integerPropType';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import * as React from 'react';
 import { isFragment } from 'react-is';
 import ImageListContext from '../ImageList/ImageListContext';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import isMuiElement from '../utils/isMuiElement';
 import imageListItemClasses, { getImageListItemUtilityClass } from './imageListItemClasses';
 
@@ -33,35 +34,54 @@ const ImageListItemRoot = styled('li', {
       styles[ownerState.variant],
     ];
   },
-})(({ ownerState }) => ({
-  display: 'inline-block',
+})({
+  display: 'block',
   position: 'relative',
-  lineHeight: 0, // 🤷🏻‍♂️Fixes masonry item gap
-  ...(ownerState.variant === 'standard' && {
-    // For titlebar under list item
-    display: 'flex',
-    flexDirection: 'column',
-  }),
-  ...(ownerState.variant === 'woven' && {
-    height: '100%',
-    alignSelf: 'center',
-    '&:nth-of-type(even)': {
-      height: '70%',
-    },
-  }),
   [`& .${imageListItemClasses.img}`]: {
     objectFit: 'cover',
     width: '100%',
     height: '100%',
-    ...(ownerState.variant === 'standard' && {
-      height: 'auto',
-      flexGrow: 1,
-    }),
+    display: 'block',
   },
-}));
+  variants: [
+    {
+      props: {
+        variant: 'standard',
+      },
+      style: {
+        // For titlebar under list item
+        display: 'flex',
+        flexDirection: 'column',
+      },
+    },
+    {
+      props: {
+        variant: 'woven',
+      },
+      style: {
+        height: '100%',
+        alignSelf: 'center',
+        '&:nth-of-type(even)': {
+          height: '70%',
+        },
+      },
+    },
+    {
+      props: {
+        variant: 'standard',
+      },
+      style: {
+        [`& .${imageListItemClasses.img}`]: {
+          height: 'auto',
+          flexGrow: 1,
+        },
+      },
+    },
+  ],
+});
 
 const ImageListItem = React.forwardRef(function ImageListItem(inProps, ref) {
-  const props = useThemeProps({
+  const props = useDefaultProps({
     props: inProps,
     name: 'MuiImageListItem',
   });
@@ -100,6 +120,7 @@ const ImageListItem = React.forwardRef(function ImageListItem(inProps, ref) {
         gridColumnEnd: variant !== 'masonry' ? `span ${cols}` : undefined,
         gridRowEnd: variant !== 'masonry' ? `span ${rows}` : undefined,
         marginBottom: variant === 'masonry' ? gap : undefined,
+        breakInside: variant === 'masonry' ? 'avoid' : undefined,
         ...style,
       }}
       ownerState={ownerState}
@@ -134,10 +155,10 @@ const ImageListItem = React.forwardRef(function ImageListItem(inProps, ref) {
 });
 
 ImageListItem.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component, normally an `<img>`.
    */
@@ -147,7 +168,7 @@ ImageListItem.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -165,14 +186,15 @@ ImageListItem.propTypes /* remove-proptypes */ = {
    * @default 1
    */
   rows: integerPropType,
-  /**
-   * @ignore
-   */
   style: PropTypes.object,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default ImageListItem;

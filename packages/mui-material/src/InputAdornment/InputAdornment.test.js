@@ -1,18 +1,18 @@
-import * as React from 'react';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import {
-  createClientRender,
-  describeConformance,
-  strictModeDoubleLoggingSupressed,
-} from 'test/utils';
+  createRenderer,
+  strictModeDoubleLoggingSuppressed,
+  screen,
+} from '@mui/internal-test-utils';
 import { typographyClasses } from '@mui/material/Typography';
 import InputAdornment, { inputAdornmentClasses as classes } from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import Input from '@mui/material/Input';
+import describeConformance from '../../test/describeConformance';
 
 describe('<InputAdornment />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<InputAdornment position="start">foo</InputAdornment>, () => ({
     classes,
@@ -21,7 +21,6 @@ describe('<InputAdornment />', () => {
     muiName: 'MuiInputAdornment',
     testVariantProps: { color: 'primary' },
     refInstanceof: window.HTMLDivElement,
-    skip: ['componentsProp'],
     testComponentPropWith: 'span',
   }));
 
@@ -51,22 +50,25 @@ describe('<InputAdornment />', () => {
 
   describe('prop: variant', () => {
     it("should inherit the TextField's variant", () => {
-      const { getByTestId } = render(
+      render(
         <TextField
           fullWidth
           placeholder="Search"
           label="Search"
           variant="filled"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment data-testid="InputAdornment" position="start">
-                foo
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment data-testid="InputAdornment" position="start">
+                  foo
+                </InputAdornment>
+              ),
+            },
           }}
         />,
       );
-      const adornment = getByTestId('InputAdornment');
+
+      const adornment = screen.getByTestId('InputAdornment');
 
       expect(adornment).to.have.class(classes.root);
       expect(adornment).to.have.class(classes.positionStart);
@@ -74,14 +76,15 @@ describe('<InputAdornment />', () => {
     });
 
     it("should inherit the FormControl's variant", () => {
-      const { getByTestId } = render(
+      render(
         <FormControl variant="filled">
           <InputAdornment data-testid="InputAdornment" position="start">
             foo
           </InputAdornment>
         </FormControl>,
       );
-      const adornment = getByTestId('InputAdornment');
+
+      const adornment = screen.getByTestId('InputAdornment');
 
       expect(adornment).to.have.class(classes.root);
       expect(adornment).to.have.class(classes.positionStart);
@@ -89,22 +92,25 @@ describe('<InputAdornment />', () => {
     });
 
     it('should override the inherited variant', () => {
-      const { getByTestId } = render(
+      render(
         <TextField
           fullWidth
           placeholder="Search"
           label="Search"
           variant="filled"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment data-testid="InputAdornment" variant="standard" position="start">
-                foo
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment data-testid="InputAdornment" variant="standard" position="start">
+                  foo
+                </InputAdornment>
+              ),
+            },
           }}
         />,
       );
-      const adornment = getByTestId('InputAdornment');
+
+      const adornment = screen.getByTestId('InputAdornment');
 
       expect(adornment).to.have.class(classes.root);
       expect(adornment).to.have.class(classes.positionStart);
@@ -140,7 +146,7 @@ describe('<InputAdornment />', () => {
       }).toErrorDev([
         'MUI: The `InputAdornment` variant infers the variant ' +
           'prop you do not have to provide one.',
-        !strictModeDoubleLoggingSupressed &&
+        !strictModeDoubleLoggingSuppressed &&
           'MUI: The `InputAdornment` variant infers the variant ' +
             'prop you do not have to provide one.',
       ]);
@@ -195,7 +201,7 @@ describe('<InputAdornment />', () => {
   });
 
   it('applies a size small class inside <FormControl size="small" />', () => {
-    const { getByTestId } = render(
+    render(
       <FormControl size="small">
         <InputAdornment position="start" data-testid="root">
           $
@@ -203,11 +209,11 @@ describe('<InputAdornment />', () => {
       </FormControl>,
     );
 
-    expect(getByTestId('root')).to.have.class(classes.sizeSmall);
+    expect(screen.getByTestId('root')).to.have.class(classes.sizeSmall);
   });
 
   it('applies a hiddenLabel class inside <FormControl hiddenLabel />', () => {
-    const { getByTestId } = render(
+    render(
       <FormControl hiddenLabel>
         <InputAdornment position="start" data-testid="root">
           $
@@ -215,6 +221,6 @@ describe('<InputAdornment />', () => {
       </FormControl>,
     );
 
-    expect(getByTestId('root')).to.have.class(classes.hiddenLabel);
+    expect(screen.getByTestId('root')).to.have.class(classes.hiddenLabel);
   });
 });

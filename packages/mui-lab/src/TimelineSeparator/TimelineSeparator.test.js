@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe } from 'vitest';
+import { createRenderer } from '@mui/internal-test-utils';
 import TimelineSeparator, { timelineSeparatorClasses as classes } from '@mui/lab/TimelineSeparator';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TimelineSeparator />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<TimelineSeparator />, () => ({
     classes,
@@ -11,6 +12,6 @@ describe('<TimelineSeparator />', () => {
     render,
     muiName: 'MuiTimelineSeparator',
     refInstanceof: window.HTMLDivElement,
-    skip: ['componentProp', 'componentsProp', 'themeVariants'],
+    skip: ['componentProp', 'themeVariants'],
   }));
 });

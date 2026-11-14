@@ -2,15 +2,15 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import { Button, Tooltip } from '@mui/material';
 import Alert from '@mui/material/Alert';
-import useAutoComplete from '@mui/material/useAutocomplete';
+import useAutocomplete from '@mui/material/useAutocomplete';
 
 // styles
 import { makeStyles } from '@mui/styles';
 import createStyles from '@mui/styles/createStyles';
 
 // unstyled
-import { SliderUnstyled } from '@mui/core';
-import SwitchUnstyled from '@mui/core/SwitchUnstyled';
+import { SliderUnstyled } from '@mui/base';
+import SwitchUnstyled from '@mui/base/SwitchUnstyled';
 
 // system
 import { SxProps } from '@mui/system';

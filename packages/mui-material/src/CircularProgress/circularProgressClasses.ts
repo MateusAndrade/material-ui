@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface CircularProgressClasses {
   /** Styles applied to the root element. */
@@ -13,12 +14,10 @@ export interface CircularProgressClasses {
   colorSecondary: string;
   /** Styles applied to the svg element. */
   svg: string;
+  /** Styles applied to the track slot if `enableTrackSlot={true}`. */
+  track: string;
   /** Styles applied to the `circle` svg path. */
   circle: string;
-  /** Styles applied to the `circle` svg path if `variant="determinate"`. */
-  circleDeterminate: string;
-  /** Styles applied to the `circle` svg path if `variant="indeterminate"`. */
-  circleIndeterminate: string;
   /** Styles applied to the `circle` svg path if `disableShrink={true}`. */
   circleDisableShrink: string;
 }
@@ -38,9 +37,8 @@ const circularProgressClasses: CircularProgressClasses = generateUtilityClasses(
     'colorPrimary',
     'colorSecondary',
     'svg',
+    'track',
     'circle',
-    'circleDeterminate',
-    'circleIndeterminate',
     'circleDisableShrink',
   ],
 );

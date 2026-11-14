@@ -1,4 +1,4 @@
-import * as React from 'react';
+
 import { styled } from '@mui/material/styles';
 const PREFIX = 'withCreateStyles1';
 
@@ -19,7 +19,7 @@ const Root = styled('div')((
 const MyComponent = (props) => {
   const { } = props;
 
-  return <Root {...props} className={classes.root} />;
+  return (<Root {...props} className={classes.root} />);
 };
 
 export default (MyComponent);

@@ -1,40 +1,43 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { refType } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import refType from '@mui/utils/refType';
+import composeClasses from '@mui/utils/composeClasses';
 import capitalize from '../utils/capitalize';
 import nativeSelectClasses, { getNativeSelectUtilityClasses } from './nativeSelectClasses';
-import styled, { rootShouldForwardProp } from '../styles/styled';
+import inputBaseClasses from '../InputBase/inputBaseClasses';
+import { styled } from '../zero-styled';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
+import inputAdornmentClasses from '../InputAdornment/inputAdornmentClasses';
 
 const useUtilityClasses = (ownerState) => {
-  const { classes, variant, disabled, open } = ownerState;
+  const { classes, variant, disabled, multiple, error } = ownerState;
 
   const slots = {
-    select: ['select', variant, disabled && 'disabled'],
-    icon: ['icon', `icon${capitalize(variant)}`, open && 'iconOpen', disabled && 'disabled'],
+    select: ['select', variant, disabled && 'disabled', multiple && 'multiple', error && 'error'],
+    icon: ['icon', `icon${capitalize(variant)}`, disabled && 'disabled'],
   };
 
   return composeClasses(slots, getNativeSelectUtilityClasses, classes);
 };
 
-export const nativeSelectSelectStyles = ({ ownerState, theme }) => ({
-  MozAppearance: 'none', // Reset
-  WebkitAppearance: 'none', // Reset
+export const StyledSelectSelect = styled('select', {
+  name: 'MuiNativeSelect',
+})(({ theme }) => ({
+  // Reset
+  MozAppearance: 'none',
+  // Reset
+  WebkitAppearance: 'none',
   // When interacting quickly, the text can end up selected.
   // Native select can't be selected either.
   userSelect: 'none',
-  borderRadius: 0, // Reset
+  // Reset
+  borderRadius: 0,
   cursor: 'pointer',
   '&:focus': {
-    // Show that it's not an text input
-    backgroundColor:
-      theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 0, // Reset Chrome style
-  },
-  // Remove IE11 arrow
-  '&::-ms-expand': {
-    display: 'none',
+    // Reset Chrome style
+    borderRadius: 0,
   },
   [`&.${nativeSelectClasses.disabled}`]: {
     cursor: 'default',
@@ -43,85 +46,153 @@ export const nativeSelectSelectStyles = ({ ownerState, theme }) => ({
     height: 'auto',
   },
   '&:not([multiple]) option, &:not([multiple]) optgroup': {
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: (theme.vars || theme).palette.background.paper,
   },
-  // Bump specificity to allow extending custom inputs
-  '&&&': {
-    paddingRight: 24,
-    minWidth: 16, // So it doesn't collapse.
+  [`& ~ .${inputAdornmentClasses.root}`]: {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    right: 'calc(var(--_caret, 24px) + (var(--_endAdornment, 28px) - 1.5rem)/2)', // 1.5rem is the default icon size
   },
-  ...(ownerState.variant === 'filled' && {
-    '&&&': {
-      paddingRight: 32,
+  [`.${inputBaseClasses.root}:has(> &)`]: {
+    '--_endAdornment': '0px',
+  },
+  variants: [
+    {
+      props: ({ ownerState }) =>
+        ownerState.variant !== 'filled' && ownerState.variant !== 'outlined',
+      style: {
+        [`.${inputBaseClasses.root}:has(> &)`]: {
+          '--_caret': '24px',
+        },
+        [`.${inputBaseClasses.root}:has(> & ~ .${inputAdornmentClasses.root})`]: {
+          '--_endAdornment': '28px',
+        },
+        // Bump specificity to allow extending custom inputs
+        '&&&': {
+          paddingRight: 'calc(var(--_caret, 24px) + var(--_endAdornment, 0px))',
+          minWidth: 16, // So it doesn't collapse.
+        },
+      },
     },
-  }),
-  ...(ownerState.variant === 'outlined' && {
-    borderRadius: theme.shape.borderRadius,
-    '&:focus': {
-      borderRadius: theme.shape.borderRadius, // Reset the reset for Chrome style
+    {
+      props: {
+        variant: 'filled',
+      },
+      style: {
+        [`.${inputBaseClasses.root}:has(> &)`]: {
+          '--_caret': '32px',
+        },
+        [`.${inputBaseClasses.root}:has(> & ~ .${inputAdornmentClasses.root})`]: {
+          '--_endAdornment': '28px',
+        },
+        '&&&': {
+          paddingRight: 'calc(var(--_caret, 32px) + var(--_endAdornment, 0px))',
+        },
+      },
     },
-    '&&&': {
-      paddingRight: 32,
+    {
+      props: {
+        variant: 'outlined',
+      },
+      style: {
+        [`.${inputBaseClasses.root}:has(> &)`]: {
+          '--_caret': '32px',
+        },
+        [`.${inputBaseClasses.root}:has(> & ~ .${inputAdornmentClasses.root})`]: {
+          '--_endAdornment': '28px',
+        },
+        borderRadius: (theme.vars || theme).shape.borderRadius,
+        '&:focus': {
+          borderRadius: (theme.vars || theme).shape.borderRadius, // Reset the reset for Chrome style
+        },
+        '&&&': {
+          paddingRight: 'calc(var(--_caret, 32px) + var(--_endAdornment, 0px))',
+        },
+      },
     },
-  }),
-});
+  ],
+}));
 
-const NativeSelectSelect = styled('select', {
+const NativeSelectSelect = styled(StyledSelectSelect, {
   name: 'MuiNativeSelect',
   slot: 'Select',
   shouldForwardProp: rootShouldForwardProp,
   overridesResolver: (props, styles) => {
     const { ownerState } = props;
 
-    return [styles.select, styles[ownerState.variant]];
+    return [
+      styles.select,
+      styles[ownerState.variant],
+      ownerState.error && styles.error,
+      { [`&.${nativeSelectClasses.multiple}`]: styles.multiple },
+    ];
   },
-})(nativeSelectSelectStyles);
+})({});
 
-export const nativeSelectIconStyles = ({ ownerState, theme }) => ({
+export const StyledSelectIcon = styled('svg', {
+  name: 'MuiNativeSelect',
+})(({ theme }) => ({
   // We use a position absolute over a flexbox in order to forward the pointer events
   // to the input and to support wrapping tags..
   position: 'absolute',
   right: 0,
-  top: 'calc(50% - .5em)', // Center vertically, height is 1em
-  pointerEvents: 'none', // Don't block pointer events on the select under the icon.
-  color: theme.palette.action.active,
+  // Center vertically, height is 1em
+  top: 'calc(50% - .5em)',
+  // Don't block pointer events on the select under the icon.
+  pointerEvents: 'none',
+  color: (theme.vars || theme).palette.action.active,
   [`&.${nativeSelectClasses.disabled}`]: {
-    color: theme.palette.action.disabled,
+    color: (theme.vars || theme).palette.action.disabled,
   },
-  ...(ownerState.open && {
-    transform: 'rotate(180deg)',
-  }),
-  ...(ownerState.variant === 'filled' && {
-    right: 7,
-  }),
-  ...(ownerState.variant === 'outlined' && {
-    right: 7,
-  }),
-});
+  variants: [
+    {
+      props: {
+        variant: 'filled',
+      },
+      style: {
+        right: 7,
+      },
+    },
+    {
+      props: {
+        variant: 'outlined',
+      },
+      style: {
+        right: 7,
+      },
+    },
+  ],
+}));
 
-const NativeSelectIcon = styled('svg', {
+const NativeSelectIcon = styled(StyledSelectIcon, {
   name: 'MuiNativeSelect',
   slot: 'Icon',
   overridesResolver: (props, styles) => {
     const { ownerState } = props;
-    return [
-      styles.icon,
-      ownerState.variant && styles[`icon${capitalize(ownerState.variant)}`],
-      ownerState.open && styles.iconOpen,
-    ];
+    return [styles.icon, ownerState.variant && styles[`icon${capitalize(ownerState.variant)}`]];
   },
-})(nativeSelectIconStyles);
+})({});
 
 /**
  * @ignore - internal component.
  */
 const NativeSelectInput = React.forwardRef(function NativeSelectInput(props, ref) {
-  const { className, disabled, IconComponent, inputRef, variant = 'standard', ...other } = props;
+  const {
+    className,
+    disabled,
+    error,
+    IconComponent,
+    inputRef,
+    variant = 'standard',
+    ...other
+  } = props;
 
   const ownerState = {
     ...props,
     disabled,
     variant,
+    error,
   };
 
   const classes = useUtilityClasses(ownerState);
@@ -149,7 +220,6 @@ NativeSelectInput.propTypes = {
   children: PropTypes.node,
   /**
    * Override or extend the styles applied to the component.
-   * See [CSS API](#css) below for more details.
    */
   classes: PropTypes.object,
   /**
@@ -160,6 +230,10 @@ NativeSelectInput.propTypes = {
    * If `true`, the select is disabled.
    */
   disabled: PropTypes.bool,
+  /**
+   * If `true`, the `select input` will indicate an error.
+   */
+  error: PropTypes.bool,
   /**
    * The icon that displays the arrow.
    */

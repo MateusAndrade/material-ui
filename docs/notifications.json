@@ -1,16 +1,7 @@
 [
   {
-    "id": 35,
-    "title": "Let's translate!",
-    "text": "<a style=\"color: inherit;\" target=\"_blank\" rel=\"noopener\" data-ga-event-category=\"l10n\" data-ga-event-action=\"notification\" data-ga-event-label=\"zh\" href=\"https://translate.mui.com/\">帮助 MUI 将文档翻译成中文</a>. 🇨🇳",
-    "userLanguage": "zh"
-  },
-  {
-    "id": 53,
-    "text": "You can <a style=\"color: inherit;\" target=\"_blank\" rel=\"noopener\" href=\"https://twitter.com/MaterialUI\">follow us on Twitter</a> to receive exclusive tips and updates about MUI and the React ecosystem."
-  },
-  {
-    "id": 54,
-    "text": "<a style=\"color: inherit;\" target=\"_blank\" rel=\"noopener\" href=\"https://twitter.com/MaterialUI/status/1438518915236126723\">MUI Core v5</a> is out 🎉"
+    "id": 89,
+    "title": "Material UI and MUI X v9 are here",
+    "text": "Unified major versions, new components, improved accessibility and much more. Read the <a style=\"color: inherit;\" data-ga-event-category=\"Announcement\" data-ga-event-action=\"notification\" data-ga-event-label=\"material-ui-v9\" href=\"https://mui.com/blog/introducing-mui-v9/\">announcement blog post</a>."
   }
 ]

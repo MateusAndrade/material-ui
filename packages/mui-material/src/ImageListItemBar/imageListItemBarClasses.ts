@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface ImageListItemBarClasses {
   /** Styles applied to the root element. */
@@ -9,22 +10,18 @@ export interface ImageListItemBarClasses {
   positionTop: string;
   /** Styles applied to the root element if `position="below"`. */
   positionBelow: string;
+  /** Styles applied to the action container element if `actionPosition="left"`. */
+  actionPositionLeft: string;
+  /** Styles applied to the action container element if `actionPosition="right"`. */
+  actionPositionRight: string;
   /** Styles applied to the title and subtitle container element. */
   titleWrap: string;
-  /** Styles applied to the title and subtitle container element if `position="below"`. */
-  titleWrapBelow: string;
-  /** Styles applied to the container element if `actionPosition="left"`. */
-  titleWrapActionPosLeft: string;
-  /** Styles applied to the container element if `actionPosition="right"`. */
-  titleWrapActionPosRight: string;
   /** Styles applied to the title container element. */
   title: string;
   /** Styles applied to the subtitle container element. */
   subtitle: string;
   /** Styles applied to the actionIcon if supplied. */
   actionIcon: string;
-  /** Styles applied to the actionIcon if `actionPosition="left"`. */
-  actionIconActionPosLeft: string;
 }
 
 export type ImageListItemBarClassKey = keyof ImageListItemBarClasses;
@@ -40,17 +37,12 @@ const imageListItemBarClasses: ImageListItemBarClasses = generateUtilityClasses(
     'positionBottom',
     'positionTop',
     'positionBelow',
+    'actionPositionLeft',
+    'actionPositionRight',
     'titleWrap',
-    'titleWrapBottom',
-    'titleWrapTop',
-    'titleWrapBelow',
-    'titleWrapActionPosLeft',
-    'titleWrapActionPosRight',
     'title',
     'subtitle',
     'actionIcon',
-    'actionIconActionPosLeft',
-    'actionIconActionPosRight',
   ],
 );
 

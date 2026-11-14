@@ -1,108 +1,64 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { spy, useFakeTimers } from 'sinon';
-import { act, describeConformance, createClientRender } from 'test/utils';
-import { Transition } from 'react-transition-group';
+import { describe, expect, it } from 'vitest';
+import { createRenderer, isJsdom } from '@mui/internal-test-utils';
 import Zoom from '@mui/material/Zoom';
+import Transition from '../internal/Transition';
+import describeConformance from '../../test/describeConformance';
+import describeTransitionConformance from '../../test/describeTransitionConformance';
 
 describe('<Zoom />', () => {
-  const render = createClientRender();
+  const { clock, render } = createRenderer();
 
   describeConformance(
     <Zoom in>
       <div />
     </Zoom>,
     () => ({
+      render,
       classes: {},
       inheritComponent: Transition,
       refInstanceof: window.HTMLDivElement,
-      skip: [
-        'componentProp',
-        'componentsProp',
-        'themeDefaultProps',
-        'themeStyleOverrides',
-        'themeVariants',
-        // react-transition-group issue
-        'reactTestRenderer',
-      ],
+      skip: ['componentProp', 'themeDefaultProps', 'themeStyleOverrides', 'themeVariants'],
     }),
   );
 
-  describe('transition lifecycle', () => {
-    let clock;
-
-    beforeEach(() => {
-      clock = useFakeTimers();
-    });
-
-    afterEach(() => {
-      clock.restore();
-    });
-
-    it('tests', () => {
-      const handleAddEndListener = spy();
-      const handleEnter = spy();
-      const handleEntering = spy();
-      const handleEntered = spy();
-      const handleExit = spy();
-      const handleExiting = spy();
-      const handleExited = spy();
-      const { container, setProps } = render(
-        <Zoom
-          addEndListener={handleAddEndListener}
-          onEnter={handleEnter}
-          onEntering={handleEntering}
-          onEntered={handleEntered}
-          onExit={handleExit}
-          onExiting={handleExiting}
-          onExited={handleExited}
-        >
-          <div id="test" />
-        </Zoom>,
-      );
-      const child = container.querySelector('#test');
-
-      setProps({ in: true });
-
-      expect(handleAddEndListener.callCount).to.equal(1);
-      expect(handleAddEndListener.args[0][0]).to.equal(child);
-      expect(typeof handleAddEndListener.args[0][1]).to.equal('function');
-
-      expect(handleEnter.callCount).to.equal(1);
-      expect(handleEnter.args[0][0]).to.equal(child);
-
-      expect(handleEnter.args[0][0].style.transition).to.match(
-        /transform 225ms cubic-bezier\(0.4, 0, 0.2, 1\)( 0ms)?/,
-      );
-
-      expect(handleEntering.callCount).to.equal(1);
-      expect(handleEntering.args[0][0]).to.equal(child);
-
-      act(() => {
-        clock.tick(1000);
-      });
-      expect(handleEntered.callCount).to.equal(1);
-      expect(handleEntered.args[0][0]).to.equal(child);
-
-      setProps({ in: false });
-
-      expect(handleExit.callCount).to.equal(1);
-      expect(handleExit.args[0][0]).to.equal(child);
-
-      expect(handleExit.args[0][0].style.transition).to.match(
-        /transform 195ms cubic-bezier\(0.4, 0, 0.2, 1\)( 0ms)?/,
-      );
-
-      expect(handleExiting.callCount).to.equal(1);
-      expect(handleExiting.args[0][0]).to.equal(child);
-
-      act(() => {
-        clock.tick(1000);
-      });
-      expect(handleExited.callCount).to.equal(1);
-      expect(handleExited.args[0][0]).to.equal(child);
-    });
-  });
+  describeTransitionConformance('Zoom', () => ({
+    Component: Zoom,
+    render,
+    clock,
+    lifecycle: {
+      addEndListener: true,
+      assertEnter: (node) => {
+        expect(node.style.transition).to.match(
+          /transform 225ms cubic-bezier\(0.4, 0, 0.2, 1\)( 0ms)?/,
+        );
+      },
+      assertExit: (node) => {
+        expect(node.style.transition).to.match(
+          /transform 195ms cubic-bezier\(0.4, 0, 0.2, 1\)( 0ms)?/,
+        );
+      },
+    },
+    themeDuration: {
+      testPropTimeout: true,
+      renderElement: (props) => (
+        <Zoom in appear {...props}>
+          <div data-testid="child">Foo</div>
+        </Zoom>
+      ),
+    },
+    reducedMotion: {
+      assertReducedTiming: (node) => {
+        if (isJsdom()) {
+          expect(node.style.transition).to.include('0ms');
+        } else {
+          expect(node.style.transitionDuration).to.equal('0ms');
+        }
+      },
+      testReflow: true,
+      testOptOut: true,
+      testNoDomPropLeak: true,
+    },
+  }));
 
   describe('prop: appear', () => {
     it('should work when initially hidden: appear=true', () => {

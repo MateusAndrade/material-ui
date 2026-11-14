@@ -1,13 +1,11 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
-
 import TextField from '../components/TextField';
+import PropTypes from 'prop-types';
 
 function RFTextField(props) {
   const {
     autoComplete,
     input,
-    InputProps,
+    slotProps,
     meta: { touched, error, submitError },
     ...other
   } = props;
@@ -17,11 +15,12 @@ function RFTextField(props) {
       error={Boolean(!!touched && (error || submitError))}
       {...input}
       {...other}
-      InputProps={{
-        inputProps: {
+      slotProps={{
+        ...slotProps,
+        htmlInput: {
           autoComplete,
+          ...slotProps?.htmlInput,
         },
-        ...InputProps,
       }}
       helperText={touched ? error || submitError : ''}
       variant="standard"
@@ -46,20 +45,13 @@ RFTextField.propTypes = {
     type: PropTypes.string,
     value: PropTypes.string.isRequired,
   }).isRequired,
-  /**
-   * Props applied to the Input element.
-   * It will be a [`FilledInput`](/api/filled-input/),
-   * [`OutlinedInput`](/api/outlined-input/) or [`Input`](/api/input/)
-   * component depending on the `variant` prop value.
-   */
-  InputProps: PropTypes.object,
   meta: PropTypes.shape({
     active: PropTypes.bool,
     data: PropTypes.object,
     dirty: PropTypes.bool,
     dirtySinceLastSubmit: PropTypes.bool,
     error: PropTypes.any,
-    initial: PropTypes.string,
+    initial: PropTypes.any,
     invalid: PropTypes.bool,
     length: PropTypes.number,
     modified: PropTypes.bool,
@@ -74,6 +66,14 @@ RFTextField.propTypes = {
     validating: PropTypes.bool,
     visited: PropTypes.bool,
   }).isRequired,
+  slotProps: PropTypes.shape({
+    formHelperText: PropTypes.object,
+    htmlInput: PropTypes.object,
+    input: PropTypes.object,
+    inputLabel: PropTypes.object,
+    root: PropTypes.object,
+    select: PropTypes.object,
+  }),
 };
 
 export default RFTextField;

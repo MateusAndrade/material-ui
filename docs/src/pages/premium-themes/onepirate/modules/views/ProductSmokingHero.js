@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -28,7 +27,7 @@ function ProductSmokingHero() {
       </Typography>
       <Box
         component="img"
-        src="/static/themes/onepirate/producBuoy.svg"
+        src="/static/themes/onepirate/productBuoy.svg"
         alt="buoy"
         sx={{ width: 60 }}
       />

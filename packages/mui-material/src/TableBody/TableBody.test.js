@@ -1,11 +1,10 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import TableBody, { tableBodyClasses as classes } from '@mui/material/TableBody';
-import Tablelvl2Context from '../Table/Tablelvl2Context';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TableBody />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   function renderInTable(node) {
     return render(<table>{node}</table>);
@@ -14,10 +13,6 @@ describe('<TableBody />', () => {
   describeConformance(<TableBody />, () => ({
     classes,
     inheritComponent: 'tbody',
-    wrapMount: (mount) => (node) => {
-      const wrapper = mount(<table>{node}</table>);
-      return wrapper.find('table').childAt(0);
-    },
     render: (node) => {
       const { container, ...other } = render(<table>{node}</table>);
       return { container: container.firstChild, ...other };
@@ -27,28 +22,12 @@ describe('<TableBody />', () => {
     refInstanceof: window.HTMLTableSectionElement,
     // can't test with custom `component` with `renderInTable`
     testComponentPropWith: 'tbody',
-    skip: ['componentsProp'],
   }));
 
   it('should render children', () => {
     const children = <tr data-testid="test" />;
-    const { getByTestId } = renderInTable(<TableBody>{children}</TableBody>);
-    getByTestId('test');
-  });
-
-  it('should define table.body in the child context', () => {
-    let context;
-    // TODO test integration with TableCell
-    renderInTable(
-      <TableBody>
-        <Tablelvl2Context.Consumer>
-          {(value) => {
-            context = value;
-          }}
-        </Tablelvl2Context.Consumer>
-      </TableBody>,
-    );
-    expect(context.variant).to.equal('body');
+    renderInTable(<TableBody>{children}</TableBody>);
+    screen.getByTestId('test');
   });
 
   describe('prop: component', () => {

@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe } from 'vitest';
+import { createRenderer } from '@mui/internal-test-utils';
 import TableContainer, { tableContainerClasses as classes } from '@mui/material/TableContainer';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TableContainer />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<TableContainer />, () => ({
     classes,
@@ -13,6 +14,5 @@ describe('<TableContainer />', () => {
     testVariantProps: { variant: 'foo' },
     refInstanceof: window.HTMLDivElement,
     testComponentPropWith: 'span',
-    skip: ['componentsProp'],
   }));
 });

@@ -1,14 +1,15 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import clsx from 'clsx';
-import { refType } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import composeClasses from '@mui/utils/composeClasses';
 import capitalize from '../utils/capitalize';
-import styled from '../styles/styled';
+import rootShouldForwardProp from '../styles/rootShouldForwardProp';
+import { styled } from '../zero-styled';
 import useControlled from '../utils/useControlled';
 import useFormControl from '../FormControl/useFormControl';
 import ButtonBase from '../ButtonBase';
 import { getSwitchBaseUtilityClass } from './switchBaseClasses';
+import useSlot from '../utils/useSlot';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, checked, disabled, edge } = ownerState;
@@ -21,18 +22,49 @@ const useUtilityClasses = (ownerState) => {
   return composeClasses(slots, getSwitchBaseUtilityClass, classes);
 };
 
-const SwitchBaseRoot = styled(ButtonBase, { skipSx: true })(({ ownerState }) => ({
+const SwitchBaseRoot = styled(ButtonBase, {
+  name: 'MuiSwitchBase',
+})({
   padding: 9,
   borderRadius: '50%',
-  ...(ownerState.edge === 'start' && {
-    marginLeft: ownerState.size === 'small' ? -3 : -12,
-  }),
-  ...(ownerState.edge === 'end' && {
-    marginRight: ownerState.size === 'small' ? -3 : -12,
-  }),
-}));
+  variants: [
+    {
+      props: {
+        edge: 'start',
+        size: 'small',
+      },
+      style: {
+        marginLeft: -3,
+      },
+    },
+    {
+      props: ({ edge, ownerState }) => edge === 'start' && ownerState.size !== 'small',
+      style: {
+        marginLeft: -12,
+      },
+    },
+    {
+      props: {
+        edge: 'end',
+        size: 'small',
+      },
+      style: {
+        marginRight: -3,
+      },
+    },
+    {
+      props: ({ edge, ownerState }) => edge === 'end' && ownerState.size !== 'small',
+      style: {
+        marginRight: -12,
+      },
+    },
+  ],
+});
 
-const SwitchBaseInput = styled('input', { skipSx: true })({
+const SwitchBaseInput = styled('input', {
+  name: 'MuiSwitchBase',
+  shouldForwardProp: rootShouldForwardProp,
+})({
   cursor: 'inherit',
   position: 'absolute',
   opacity: 0,
@@ -53,26 +85,26 @@ const SwitchBase = React.forwardRef(function SwitchBase(props, ref) {
     autoFocus,
     checked: checkedProp,
     checkedIcon,
-    className,
     defaultChecked,
     disabled: disabledProp,
     disableFocusRipple = false,
     edge = false,
     icon,
     id,
-    inputProps,
-    inputRef,
     name,
     onBlur,
     onChange,
     onFocus,
     readOnly,
-    required,
+    required = false,
     tabIndex,
     type,
     value,
+    slots = {},
+    slotProps = {},
     ...other
   } = props;
+  const { nativeButton, ...buttonBaseProps } = other;
   const [checked, setCheckedState] = useControlled({
     controlled: checkedProp,
     default: Boolean(defaultChecked),
@@ -103,8 +135,8 @@ const SwitchBase = React.forwardRef(function SwitchBase(props, ref) {
   };
 
   const handleInputChange = (event) => {
-    // Workaround for https://github.com/facebook/react/issues/9023
-    if (event.nativeEvent.defaultPrevented) {
+    // Workaround for https://github.com/react/react/issues/9023
+    if (event.nativeEvent.defaultPrevented || readOnly) {
       return;
     }
 
@@ -138,41 +170,74 @@ const SwitchBase = React.forwardRef(function SwitchBase(props, ref) {
 
   const classes = useUtilityClasses(ownerState);
 
+  const externalForwardedProps = {
+    slots,
+    slotProps,
+  };
+
+  const [RootSlot, rootSlotProps] = useSlot('root', {
+    ref,
+    elementType: SwitchBaseRoot,
+    className: classes.root,
+    shouldForwardComponentProp: true,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      component: 'span',
+      ...buttonBaseProps,
+    },
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onFocus: (event) => {
+        handlers.onFocus?.(event);
+        handleFocus(event);
+      },
+      onBlur: (event) => {
+        handlers.onBlur?.(event);
+        handleBlur(event);
+      },
+    }),
+    ownerState,
+    additionalProps: {
+      centerRipple: true,
+      focusRipple: !disableFocusRipple,
+      role: undefined,
+      tabIndex: null,
+      internalDisabledThemeFocusVisible: true,
+    },
+  });
+
+  const [InputSlot, inputSlotProps] = useSlot('input', {
+    elementType: SwitchBaseInput,
+    className: classes.input,
+    externalForwardedProps,
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onChange: (event) => {
+        handlers.onChange?.(event);
+        handleInputChange(event);
+      },
+    }),
+    ownerState,
+    additionalProps: {
+      autoFocus,
+      checked: checkedProp,
+      defaultChecked,
+      disabled,
+      id: hasLabelFor ? id : undefined,
+      name,
+      readOnly,
+      required,
+      tabIndex,
+      type,
+      ...(type === 'checkbox' && value === undefined ? {} : { value }),
+    },
+  });
+
   return (
-    <SwitchBaseRoot
-      component="span"
-      className={clsx(classes.root, className)}
-      centerRipple
-      focusRipple={!disableFocusRipple}
-      disabled={disabled}
-      tabIndex={null}
-      role={undefined}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      ownerState={ownerState}
-      ref={ref}
-      {...other}
-    >
-      <SwitchBaseInput
-        autoFocus={autoFocus}
-        checked={checkedProp}
-        defaultChecked={defaultChecked}
-        className={classes.input}
-        disabled={disabled}
-        id={hasLabelFor && id}
-        name={name}
-        onChange={handleInputChange}
-        readOnly={readOnly}
-        ref={inputRef}
-        required={required}
-        ownerState={ownerState}
-        tabIndex={tabIndex}
-        type={type}
-        {...(type === 'checkbox' && value === undefined ? {} : { value })}
-        {...inputProps}
-      />
+    <RootSlot {...rootSlotProps}>
+      <InputSlot {...inputSlotProps} />
       {checked ? checkedIcon : icon}
-    </SwitchBaseRoot>
+    </RootSlot>
   );
 });
 
@@ -193,7 +258,6 @@ SwitchBase.propTypes = {
   checkedIcon: PropTypes.node.isRequired,
   /**
    * Override or extend the styles applied to the component.
-   * See [CSS API](#css) below for more details.
    */
   classes: PropTypes.object,
   /**
@@ -229,14 +293,6 @@ SwitchBase.propTypes = {
    * The id of the `input` element.
    */
   id: PropTypes.string,
-  /**
-   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
-   */
-  inputProps: PropTypes.object,
-  /**
-   * Pass a ref to the `input` element.
-   */
-  inputRef: refType,
   /*
    * @ignore
    */
@@ -265,6 +321,22 @@ SwitchBase.propTypes = {
    * If `true`, the `input` element is required.
    */
   required: PropTypes.bool,
+  /**
+   * The props used for each slot inside.
+   * @default {}
+   */
+  slotProps: PropTypes.shape({
+    input: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    root: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  }),
+  /**
+   * The components used for each slot inside.
+   * @default {}
+   */
+  slots: PropTypes.shape({
+    input: PropTypes.elementType,
+    root: PropTypes.elementType,
+  }),
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */

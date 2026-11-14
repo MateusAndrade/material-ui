@@ -1,0 +1,175 @@
+{
+  "props": {
+    "open": { "type": { "name": "bool" }, "required": true },
+    "aria-describedby": { "type": { "name": "string" } },
+    "aria-labelledby": { "type": { "name": "string" } },
+    "aria-modal": {
+      "type": {
+        "name": "union",
+        "description": "'false'<br>&#124;&nbsp;'true'<br>&#124;&nbsp;bool"
+      },
+      "default": "true"
+    },
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "fullScreen": { "type": { "name": "bool" }, "default": "false" },
+    "fullWidth": { "type": { "name": "bool" }, "default": "false" },
+    "maxWidth": {
+      "type": {
+        "name": "union",
+        "description": "'xs'<br>&#124;&nbsp;'sm'<br>&#124;&nbsp;'md'<br>&#124;&nbsp;'lg'<br>&#124;&nbsp;'xl'<br>&#124;&nbsp;false<br>&#124;&nbsp;string"
+      },
+      "default": "'sm'"
+    },
+    "onClose": {
+      "type": { "name": "func" },
+      "signature": {
+        "type": "function(event: object, reason: string) => void",
+        "describedArgs": ["event", "reason"]
+      }
+    },
+    "PaperComponent": { "type": { "name": "elementType" }, "default": "Paper" },
+    "role": {
+      "type": { "name": "enum", "description": "'alertdialog'<br>&#124;&nbsp;'dialog'" },
+      "default": "'dialog'"
+    },
+    "scroll": {
+      "type": { "name": "enum", "description": "'body'<br>&#124;&nbsp;'paper'" },
+      "default": "'paper'"
+    },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ backdrop?: func<br>&#124;&nbsp;object, container?: func<br>&#124;&nbsp;object, paper?: func<br>&#124;&nbsp;object, root?: func<br>&#124;&nbsp;object, transition?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": {
+        "name": "shape",
+        "description": "{ backdrop?: elementType, container?: elementType, paper?: elementType, root?: elementType, transition?: elementType }"
+      },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "transitionDuration": {
+      "type": {
+        "name": "union",
+        "description": "number<br>&#124;&nbsp;{ appear?: number, enter?: number, exit?: number }"
+      },
+      "default": "{\n  enter: theme.transitions.duration.enteringScreen,\n  exit: theme.transitions.duration.leavingScreen,\n}"
+    }
+  },
+  "name": "Dialog",
+  "imports": [
+    "import Dialog from '@mui/material/Dialog';",
+    "import { Dialog } from '@mui/material';"
+  ],
+  "slots": [
+    {
+      "name": "transition",
+      "description": "The component that renders the transition.\n[Follow this guide](/material-ui/transitions/#transition-slots) to learn more about the requirements for this component.",
+      "default": "Collapse",
+      "class": null
+    },
+    {
+      "name": "paper",
+      "description": "The component that renders the paper.",
+      "default": "Paper",
+      "class": "MuiDialog-paper"
+    },
+    {
+      "name": "container",
+      "description": "The component that renders the container.",
+      "default": "'div'",
+      "class": "MuiDialog-container"
+    },
+    {
+      "name": "backdrop",
+      "description": "The component that renders the backdrop.",
+      "default": "Backdrop",
+      "class": "MuiDialog-backdrop"
+    },
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "default": "Modal",
+      "class": "MuiDialog-root"
+    }
+  ],
+  "classes": [
+    {
+      "key": "paperFullScreen",
+      "className": "MuiDialog-paperFullScreen",
+      "description": "Styles applied to the Paper component if `fullScreen={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperFullWidth",
+      "className": "MuiDialog-paperFullWidth",
+      "description": "Styles applied to the Paper component if `fullWidth={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthFalse",
+      "className": "MuiDialog-paperWidthFalse",
+      "description": "Styles applied to the Paper component if `maxWidth=false`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthLg",
+      "className": "MuiDialog-paperWidthLg",
+      "description": "Styles applied to the Paper component if `maxWidth=\"lg\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthMd",
+      "className": "MuiDialog-paperWidthMd",
+      "description": "Styles applied to the Paper component if `maxWidth=\"md\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthSm",
+      "className": "MuiDialog-paperWidthSm",
+      "description": "Styles applied to the Paper component if `maxWidth=\"sm\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthXl",
+      "className": "MuiDialog-paperWidthXl",
+      "description": "Styles applied to the Paper component if `maxWidth=\"xl\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "paperWidthXs",
+      "className": "MuiDialog-paperWidthXs",
+      "description": "Styles applied to the Paper component if `maxWidth=\"xs\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "scrollBody",
+      "className": "MuiDialog-scrollBody",
+      "description": "Styles applied to the container element if `scroll=\"body\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "scrollPaper",
+      "className": "MuiDialog-scrollPaper",
+      "description": "Styles applied to the container element if `scroll=\"paper\"`.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiDialog",
+  "forwardsRefTo": "HTMLDivElement",
+  "filename": "/packages/mui-material/src/Dialog/Dialog.js",
+  "inheritance": { "component": "Modal", "pathname": "/material-ui/api/modal/" },
+  "demos": "<ul><li><a href=\"/material-ui/react-dialog/\">Dialog</a></li></ul>"
+}

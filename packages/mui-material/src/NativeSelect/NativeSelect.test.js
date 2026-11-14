@@ -1,12 +1,13 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
+import { createRenderer, screen, isJsdom } from '@mui/internal-test-utils';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { createClientRender, describeConformance } from 'test/utils';
 import NativeSelect, { nativeSelectClasses as classes } from '@mui/material/NativeSelect';
 import Input, { inputClasses } from '@mui/material/Input';
+import describeConformance from '../../test/describeConformance';
 
 describe('<NativeSelect />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
   const defaultProps = {
     input: <Input />,
     children: [
@@ -25,11 +26,11 @@ describe('<NativeSelect />', () => {
     render,
     refInstanceof: window.HTMLDivElement,
     muiName: 'MuiNativeSelect',
-    skip: ['componentProp', 'componentsProp', 'themeVariants', 'themeStyleOverrides'],
+    skip: ['componentProp', 'themeVariants', 'themeStyleOverrides'],
   }));
 
   it('should render a native select', () => {
-    const { getByRole } = render(
+    render(
       <NativeSelect {...defaultProps} value={10}>
         <option value="">empty</option>
         <option value={10}>Ten</option>
@@ -38,7 +39,7 @@ describe('<NativeSelect />', () => {
       </NativeSelect>,
     );
 
-    const select = getByRole('combobox');
+    const select = screen.getByRole('combobox');
     const options = select.children;
     expect(select.value).to.equal('10');
     expect(options.length).to.equal(4);
@@ -59,15 +60,11 @@ describe('<NativeSelect />', () => {
   });
 
   it('should provide the classes to the select component', () => {
-    const { getByRole } = render(<NativeSelect {...defaultProps} />);
-    expect(getByRole('combobox')).to.have.class(classes.select);
+    render(<NativeSelect {...defaultProps} />);
+    expect(screen.getByRole('combobox')).to.have.class(classes.select);
   });
 
-  it('slots overrides should work', function test() {
-    if (/jsdom/.test(window.navigator.userAgent)) {
-      this.skip();
-    }
-
+  it.skipIf(isJsdom())('slots overrides should work', function test() {
     const iconStyle = {
       marginTop: '13px',
     };
@@ -93,14 +90,28 @@ describe('<NativeSelect />', () => {
 
   it('styled NativeSelect with custom input should not overwritten className', () => {
     const StyledSelect = styled(NativeSelect)({});
-    const { getByTestId } = render(
+
+    render(
       <StyledSelect
         className="foo"
         input={<Input data-testid="root" className="bar" />}
         value=""
       />,
     );
-    expect(getByTestId('root')).to.have.class('foo');
-    expect(getByTestId('root')).to.have.class('bar');
+
+    expect(screen.getByTestId('root')).to.have.class('foo');
+    expect(screen.getByTestId('root')).to.have.class('bar');
+  });
+
+  it('should forward the ref of the input element', () => {
+    const inputRef = React.createRef();
+    const ref = React.createRef();
+    const { container } = render(
+      <NativeSelect {...defaultProps} ref={ref} input={<Input ref={inputRef} />} />,
+    );
+
+    const inputRoot = container.querySelector(`.${inputClasses.root}`);
+    expect(inputRef.current).to.equal(inputRoot);
+    expect(ref.current).to.equal(inputRoot);
   });
 });

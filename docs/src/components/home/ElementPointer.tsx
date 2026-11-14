@@ -1,5 +1,6 @@
 import * as React from 'react';
-import Box, { BoxProps } from '@mui/material/Box';
+import type { BoxProps } from '@mui/material/Box';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { debounce } from '@mui/material/utils';
 
@@ -9,12 +10,12 @@ export const withPointer = <T extends React.ElementType>(
   Component: T,
   options: { id: string; name: string },
 ) => {
-  const WithPointer = (props: unknown) => {
-    const root = React.useRef<null | HTMLElement>(null);
+  function WithPointer(props: object) {
+    const root = React.useRef<HTMLElement>(null);
     const handleMouseOver = React.useContext(PointerContext);
     return (
       <React.Fragment>
-        {/* @ts-ignore */}
+        {/* @ts-expect-error: The generic element type cannot prove support for the injected ref and mouse handler. */}
         <Component
           ref={root}
           {...props}
@@ -31,7 +32,7 @@ export const withPointer = <T extends React.ElementType>(
         />
       </React.Fragment>
     );
-  };
+  }
 
   return WithPointer as T;
 };
@@ -42,7 +43,7 @@ export default function PointerContainer({
   onElementChange,
   ...props
 }: BoxProps & { onElementChange?: (data: Data) => void }) {
-  const container = React.useRef<null | HTMLDivElement>(null);
+  const container = React.useRef<HTMLDivElement>(null);
   const [data, setData] = React.useState<Data>({
     id: null,
     name: null,
@@ -103,10 +104,7 @@ export default function PointerContainer({
               }}
             >
               <Typography
-                color="#fff"
-                fontSize="0.625rem"
-                fontWeight={500}
-                sx={{ display: 'block' }}
+                sx={{ color: '#fff', fontSize: '0.625rem', fontWeight: 500, display: 'block' }}
               >
                 {data.name}
               </Typography>

@@ -1,48 +1,62 @@
 {
   "name": "@mui/system",
-  "version": "5.0.4",
-  "private": false,
+  "version": "10.0.0-alpha.0",
   "author": "MUI Team",
-  "description": "CSS utilities for rapidly laying out custom designs.",
-  "main": "./src/index.js",
+  "description": "MUI System is a set of CSS utilities to help you build custom designs more efficiently. It makes it possible to rapidly lay out custom designs.",
+  "license": "MIT",
   "keywords": [
     "react",
     "react-component",
-    "material-ui",
+    "mui",
     "system"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mui-org/material-ui.git",
+    "url": "git+https://github.com/mui/material-ui.git",
     "directory": "packages/mui-system"
   },
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mui-org/material-ui/issues"
+    "url": "https://github.com/mui/material-ui/issues"
   },
-  "homepage": "https://mui.com/system/basics/",
+  "homepage": "https://mui.com/system/getting-started/",
   "funding": {
     "type": "opencollective",
-    "url": "https://opencollective.com/material-ui"
+    "url": "https://opencollective.com/mui-org"
   },
   "scripts": {
-    "build": "yarn build:legacy && yarn build:modern && yarn build:node && yarn build:stable && yarn build:types && yarn build:copy-files",
-    "build:legacy": "node ../../scripts/build legacy",
-    "build:modern": "node ../../scripts/build modern",
-    "build:node": "node ../../scripts/build node",
-    "build:stable": "node ../../scripts/build stable",
-    "build:copy-files": "node ../../scripts/copy-files.js",
-    "build:types": "node ../../scripts/buildTypes",
-    "prebuild": "rimraf build tsconfig.build.tsbuildinfo",
-    "release": "yarn build && npm publish build",
-    "test": "cd ../../ && cross-env NODE_ENV=test mocha 'packages/mui-system/**/*.test.{js,ts,tsx}'",
-    "typescript": "tslint -p tsconfig.json \"{src,test}/**/*.{spec,d}.{ts,tsx}\" && tsc -p tsconfig.json"
+    "build": "code-infra build --tsgo --flat",
+    "release": "pnpm build && pnpm publish",
+    "test": "pnpm --workspace-root test:unit --project \"*:@mui/system\"",
+    "typescript": "tsc -p tsconfig.json",
+    "attw": "attw --pack ./build --entrypoints \".\" \"Box\" \"styled\" \"useTheme\""
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.29.7 || ^8.0.5",
+    "@mui/private-theming": "workspace:*",
+    "@mui/styled-engine": "workspace:*",
+    "@mui/types": "workspace:^",
+    "@mui/utils": "workspace:*",
+    "clsx": "^2.1.1",
+    "csstype": "^3.2.3",
+    "prop-types": "^15.8.1"
+  },
+  "devDependencies": {
+    "@emotion/cache": "11.14.0",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/system": "workspace:*",
+    "@types/prop-types": "15.7.15",
+    "@types/react": "19.3.0",
+    "@types/sinon": "22.0.2",
+    "react": "19.3.1",
+    "sinon": "22.1.0",
+    "styled-components": "6.6.0"
   },
   "peerDependencies": {
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.5.0",
     "@emotion/styled": "^11.3.0",
-    "@types/react": "^16.8.6 || ^17.0.0",
-    "react": "^17.0.2"
+    "@types/react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@types/react": {
@@ -55,21 +69,14 @@
       "optional": true
     }
   },
-  "dependencies": {
-    "@babel/runtime": "^7.15.4",
-    "@mui/private-theming": "^5.0.1",
-    "@mui/styled-engine": "^5.0.1",
-    "@mui/types": "^7.0.0",
-    "@mui/utils": "^5.0.1",
-    "clsx": "^1.1.1",
-    "csstype": "^3.0.9",
-    "prop-types": "^15.7.2"
-  },
   "sideEffects": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "build"
   },
-  "engines": {
-    "node": ">=12.0.0"
+  "exports": {
+    ".": "./src/index.ts",
+    "./RtlProvider": "./src/RtlProvider/index.tsx",
+    "./*": "./src/*/index.ts"
   }
 }

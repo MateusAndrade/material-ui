@@ -1,61 +1,61 @@
 {
   "name": "@mui/private-theming",
-  "version": "5.0.1",
-  "private": false,
+  "version": "10.0.0-alpha.0",
   "author": "MUI Team",
-  "description": "MUI Theming - The React theme context to be shared between `@mui/styles` and `@mui/material`.",
-  "main": "./src/index.js",
+  "description": "Private - The React theme context to be shared between `@mui/styles` and `@mui/material`.",
+  "license": "MIT",
   "keywords": [
     "react",
     "react-component",
-    "material-ui",
+    "mui",
     "theme"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mui-org/material-ui.git",
+    "url": "git+https://github.com/mui/material-ui.git",
     "directory": "packages/mui-private-theming"
   },
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mui-org/material-ui/issues"
+    "url": "https://github.com/mui/material-ui/issues"
   },
-  "homepage": "https://mui.com/",
+  "homepage": "https://github.com/mui/material-ui/tree/master/packages/mui-private-theming",
   "funding": {
     "type": "opencollective",
-    "url": "https://opencollective.com/material-ui"
+    "url": "https://opencollective.com/mui-org"
   },
   "scripts": {
-    "build": "yarn build:legacy && yarn build:modern && yarn build:node && yarn build:stable && yarn build:copy-files",
-    "build:legacy": "node ../../scripts/build legacy",
-    "build:modern": "node ../../scripts/build modern",
-    "build:node": "node ../../scripts/build node",
-    "build:stable": "node ../../scripts/build stable",
-    "build:copy-files": "node ../../scripts/copy-files.js",
-    "prebuild": "rimraf build",
-    "release": "yarn build && npm publish build",
-    "test": "cd ../../ && cross-env NODE_ENV=test mocha 'packages/mui-private-theming/**/*.test.{js,ts,tsx}'",
-    "typescript": "tslint -p tsconfig.json \"{src,test}/**/*.{spec,d}.{ts,tsx}\" && tsc -p tsconfig.json"
+    "build": "code-infra build --tsgo --flat",
+    "release": "pnpm build && pnpm publish",
+    "test": "pnpm --workspace-root test:unit --project \"*:@mui/private-theming\"",
+    "typescript": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.29.7 || ^8.0.5",
+    "@mui/utils": "workspace:*",
+    "prop-types": "^15.8.1"
+  },
+  "devDependencies": {
+    "@mui/types": "workspace:^",
+    "@types/prop-types": "15.7.15",
+    "@types/react": "19.3.0",
+    "react": "19.3.1"
   },
   "peerDependencies": {
-    "@types/react": "^16.8.6 || ^17.0.0",
-    "react": "^17.0.2"
+    "@types/react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@types/react": {
       "optional": true
     }
   },
-  "dependencies": {
-    "@babel/runtime": "^7.15.4",
-    "@mui/utils": "^5.0.1",
-    "prop-types": "^15.7.2"
-  },
   "sideEffects": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "build"
   },
-  "engines": {
-    "node": ">=12.0.0"
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*/index.ts"
   }
 }

@@ -1,10 +1,12 @@
+'use client';
 import * as React from 'react';
 import { isFragment } from 'react-is';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { getBottomNavigationUtilityClass } from './bottomNavigationClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -20,16 +22,17 @@ const useUtilityClasses = (ownerState) => {
 const BottomNavigationRoot = styled('div', {
   name: 'MuiBottomNavigation',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
-})(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'center',
-  height: 56,
-  backgroundColor: theme.palette.background.paper,
-}));
+})(
+  memoTheme(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    height: 56,
+    backgroundColor: (theme.vars || theme).palette.background.paper,
+  })),
+);
 
 const BottomNavigation = React.forwardRef(function BottomNavigation(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiBottomNavigation' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiBottomNavigation' });
   const {
     children,
     className,
@@ -86,10 +89,10 @@ const BottomNavigation = React.forwardRef(function BottomNavigation(inProps, ref
 });
 
 BottomNavigation.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -99,7 +102,7 @@ BottomNavigation.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -123,7 +126,11 @@ BottomNavigation.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The value of the currently selected `BottomNavigationAction`.
    */

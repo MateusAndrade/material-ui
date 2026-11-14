@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
@@ -26,7 +24,7 @@ function ProductValues() {
           sx={{ pointerEvents: 'none', position: 'absolute', top: -180 }}
         />
         <Grid container spacing={5}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={item}>
               <Box
                 component="img"
@@ -41,14 +39,13 @@ function ProductValues() {
                 {
                   'From the latest trendy boutique hotel to the iconic palace with XXL pool'
                 }
-
                 {
                   ', go for a mini-vacation just a few subway stops away from your home.'
                 }
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={item}>
               <Box
                 component="img"
@@ -63,12 +60,11 @@ function ProductValues() {
                 {
                   'Privatize a pool, take a Japanese bath or wake up in 900m2 of garden… '
                 }
-
                 {'your Sundays will not be alike.'}
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={item}>
               <Box
                 component="img"

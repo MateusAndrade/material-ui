@@ -1,0 +1,113 @@
+{
+  "props": {
+    "addEndListener": {
+      "type": { "name": "func" },
+      "signature": {
+        "type": "function(node: HTMLElement, done: Function) => void",
+        "describedArgs": ["node", "done"]
+      }
+    },
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "collapsedSize": {
+      "type": { "name": "union", "description": "number<br>&#124;&nbsp;string" },
+      "default": "'0px'"
+    },
+    "component": { "type": { "name": "custom", "description": "element type" } },
+    "disablePrefersReducedMotion": { "type": { "name": "bool" }, "default": "false" },
+    "easing": {
+      "type": {
+        "name": "union",
+        "description": "{ enter?: string, exit?: string }<br>&#124;&nbsp;string"
+      }
+    },
+    "in": { "type": { "name": "bool" } },
+    "orientation": {
+      "type": { "name": "enum", "description": "'horizontal'<br>&#124;&nbsp;'vertical'" },
+      "default": "'vertical'"
+    },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ root?: func<br>&#124;&nbsp;object, wrapper?: func<br>&#124;&nbsp;object, wrapperInner?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": {
+        "name": "shape",
+        "description": "{ root?: elementType, wrapper?: elementType, wrapperInner?: elementType }"
+      },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "timeout": {
+      "type": {
+        "name": "union",
+        "description": "'auto'<br>&#124;&nbsp;number<br>&#124;&nbsp;{ appear?: number, enter?: number, exit?: number }"
+      },
+      "default": "duration.standard"
+    }
+  },
+  "name": "Collapse",
+  "imports": [
+    "import Collapse from '@mui/material/Collapse';",
+    "import { Collapse } from '@mui/material';"
+  ],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "default": "'div'",
+      "class": "MuiCollapse-root"
+    },
+    {
+      "name": "wrapper",
+      "description": "The component that renders the wrapper.",
+      "default": "'div'",
+      "class": "MuiCollapse-wrapper"
+    },
+    {
+      "name": "wrapperInner",
+      "description": "The component that renders the inner wrapper.",
+      "default": "'div'",
+      "class": "MuiCollapse-wrapperInner"
+    }
+  ],
+  "classes": [
+    {
+      "key": "entered",
+      "className": "MuiCollapse-entered",
+      "description": "Styles applied to the root element when the transition has entered.",
+      "isGlobal": false
+    },
+    {
+      "key": "hidden",
+      "className": "MuiCollapse-hidden",
+      "description": "Styles applied to the root element when the transition has exited and `collapsedSize` = 0px.",
+      "isGlobal": false
+    },
+    {
+      "key": "horizontal",
+      "className": "MuiCollapse-horizontal",
+      "description": "State class applied to the root element if `orientation=\"horizontal\"`.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiCollapse",
+  "forwardsRefTo": "HTMLDivElement",
+  "filename": "/packages/mui-material/src/Collapse/Collapse.js",
+  "inheritance": {
+    "component": "Transition",
+    "pathname": "https://reactcommunity.org/react-transition-group/transition/#Transition-props"
+  },
+  "demos": "<ul><li><a href=\"/material-ui/react-card/\">Card</a></li>\n<li><a href=\"/material-ui/react-list/\">Lists</a></li>\n<li><a href=\"/material-ui/transitions/\">Transitions</a></li></ul>"
+}

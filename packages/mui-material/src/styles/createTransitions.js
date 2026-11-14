@@ -1,3 +1,6 @@
+const DEFAULT_TRANSITION_PROPS = ['all'];
+const EMPTY_OPTIONS = {};
+
 // Follow https://material.google.com/motion/duration-easing.html#duration-easing-natural-easing-curves
 // to learn the context in which each easing should be used.
 export const easing = {
@@ -12,7 +15,7 @@ export const easing = {
   sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
 };
 
-// Follow https://material.io/guidelines/motion/duration-easing.html#duration-easing-common-durations
+// Follow https://m2.material.io/guidelines/motion/duration-easing.html#duration-easing-common-durations
 // to learn when use what timing
 export const duration = {
   shortest: 150,
@@ -39,22 +42,25 @@ function getAutoHeightDuration(height) {
 
   const constant = height / 36;
 
-  // https://www.wolframalpha.com/input/?i=(4+%2B+15+*+(x+%2F+36+)+**+0.25+%2B+(x+%2F+36)+%2F+5)+*+10
-  return Math.round((4 + 15 * constant ** 0.25 + constant / 5) * 10);
+  // https://www.desmos.com/calculator/vbrp3ggqet
+  return Math.min(Math.round((4 + 15 * constant ** 0.25 + constant / 5) * 10), 3000);
 }
 
 export default function createTransitions(inputTransitions) {
+  const transitions = { ...inputTransitions };
+  delete transitions.reducedMotion;
+
   const mergedEasing = {
     ...easing,
-    ...inputTransitions.easing,
+    ...transitions.easing,
   };
 
   const mergedDuration = {
     ...duration,
-    ...inputTransitions.duration,
+    ...transitions.duration,
   };
 
-  const create = (props = ['all'], options = {}) => {
+  const createTransitionValue = (props = DEFAULT_TRANSITION_PROPS, options = EMPTY_OPTIONS) => {
     const {
       duration: durationOption = mergedDuration.standard,
       easing: easingOption = mergedEasing.easeInOut,
@@ -64,9 +70,7 @@ export default function createTransitions(inputTransitions) {
 
     if (process.env.NODE_ENV !== 'production') {
       const isString = (value) => typeof value === 'string';
-      // IE11 support, replace with Number.isNaN
-      // eslint-disable-next-line no-restricted-globals
-      const isNumber = (value) => !isNaN(parseFloat(value));
+      const isNumber = (value) => !Number.isNaN(parseFloat(value));
       if (!isString(props) && !Array.isArray(props)) {
         console.error('MUI: Argument "props" must be a string or Array.');
       }
@@ -85,6 +89,15 @@ export default function createTransitions(inputTransitions) {
         console.error('MUI: Argument "delay" must be a number or a string.');
       }
 
+      if (typeof options !== 'object') {
+        console.error(
+          [
+            'MUI: Secong argument of transition.create must be an object.',
+            "Arguments should be either `create('prop1', options)` or `create(['prop1', 'prop2'], options)`",
+          ].join('\n'),
+        );
+      }
+
       if (Object.keys(other).length !== 0) {
         console.error(`MUI: Unrecognized argument(s) [${Object.keys(other).join(',')}].`);
       }
@@ -100,10 +113,12 @@ export default function createTransitions(inputTransitions) {
       .join(',');
   };
 
+  const create = transitions.create ?? createTransitionValue;
+
   return {
     getAutoHeightDuration,
     create,
-    ...inputTransitions,
+    ...transitions,
     easing: mergedEasing,
     duration: mergedDuration,
   };

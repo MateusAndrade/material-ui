@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface AccordionSummaryClasses {
   /** Styles applied to the root element. */
@@ -11,8 +12,6 @@ export interface AccordionSummaryClasses {
   disabled: string;
   /** Styles applied to the root element unless `disableGutters={true}`. */
   gutters: string;
-  /** Styles applied to the children wrapper element unless `disableGutters={true}`. */
-  contentGutters: string;
   /** Styles applied to the children wrapper element. */
   content: string;
   /** Styles applied to the `expandIcon`'s wrapper element. */
@@ -27,16 +26,7 @@ export function getAccordionSummaryUtilityClass(slot: string): string {
 
 const accordionSummaryClasses: AccordionSummaryClasses = generateUtilityClasses(
   'MuiAccordionSummary',
-  [
-    'root',
-    'expanded',
-    'focusVisible',
-    'disabled',
-    'gutters',
-    'contentGutters',
-    'content',
-    'expandIconWrapper',
-  ],
+  ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'content', 'expandIconWrapper'],
 );
 
 export default accordionSummaryClasses;

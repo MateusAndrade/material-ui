@@ -1,10 +1,13 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import TableCell, { tableCellClasses as classes } from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Table from '@mui/material/Table';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TableCell />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
   function renderInTable(node) {
     return render(
       <table>
@@ -28,22 +31,11 @@ describe('<TableCell />', () => {
       );
       return { container: container.firstChild.firstChild.firstChild, ...other };
     },
-    wrapMount: (mount) => (node) => {
-      const wrapper = mount(
-        <table>
-          <tbody>
-            <tr>{node}</tr>
-          </tbody>
-        </table>,
-      );
-      return wrapper.find('tr').childAt(0);
-    },
     muiName: 'MuiTableCell',
     testVariantProps: { variant: 'body' },
     refInstanceof: window.HTMLTableCellElement,
     // invalid nesting otherwise
     testComponentPropWith: 'td',
-    skip: ['componentsProp'],
   }));
 
   describe('prop: padding', () => {
@@ -70,8 +62,8 @@ describe('<TableCell />', () => {
 
   it('should render children', () => {
     const children = <p data-testid="hello">Hello</p>;
-    const { getByTestId } = renderInTable(<TableCell>{children}</TableCell>);
-    expect(getByTestId('hello')).not.to.equal(null);
+    renderInTable(<TableCell>{children}</TableCell>);
+    expect(screen.getByTestId('hello')).not.to.equal(null);
   });
 
   it('should render aria-sort="ascending" when prop sortDirection="asc" provided', () => {
@@ -92,5 +84,18 @@ describe('<TableCell />', () => {
   it('should allow the default role (rowheader) to trigger', () => {
     const { container } = renderInTable(<TableCell component="th" scope="row" />);
     expect(container.querySelector('th')).not.to.have.attribute('role');
+  });
+
+  it('should not set scope attribute when TableCell is rendered as <td> within table head', () => {
+    const { container } = render(
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell component="td" />
+          </TableRow>
+        </TableHead>
+      </Table>,
+    );
+    expect(container.querySelector('td')).not.to.have.attribute('scope');
   });
 });

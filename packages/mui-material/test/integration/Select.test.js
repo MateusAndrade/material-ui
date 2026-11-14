@@ -1,7 +1,6 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { useFakeTimers } from 'sinon';
-import { act, createClientRender, fireEvent } from 'test/utils';
+import { act, createRenderer, fireEvent, screen } from '@mui/internal-test-utils';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Dialog from '@mui/material/Dialog';
@@ -9,7 +8,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 
 describe('<Select> integration', () => {
-  const render = createClientRender();
+  const { clock, render } = createRenderer({ clock: 'fake' });
 
   describe('with Dialog', () => {
     function SelectAndDialog() {
@@ -23,7 +22,7 @@ describe('<Select> integration', () => {
           <Select
             MenuProps={{
               transitionDuration: 0,
-              BackdropProps: { 'data-testid': 'select-backdrop' },
+              slotProps: { backdrop: { 'data-testid': 'select-backdrop' } },
             }}
             value={value}
             onChange={handleChange}
@@ -39,62 +38,46 @@ describe('<Select> integration', () => {
       );
     }
 
-    /**
-     * @type {ReturnType<typeof useFakeTimers>}
-     */
-    let clock;
-    beforeEach(() => {
-      clock = useFakeTimers();
-    });
+    it('should focus the selected item', async () => {
+      render(<SelectAndDialog />);
 
-    afterEach(() => {
-      clock.restore();
-    });
-
-    it('should focus the selected item', () => {
-      const { getByTestId, getAllByRole, getByRole, queryByRole } = render(<SelectAndDialog />);
-
-      const trigger = getByRole('button');
+      const trigger = screen.getByRole('combobox');
       // Let's open the select component
       // in the browser user click also focuses
       fireEvent.mouseDown(trigger);
 
-      const options = getAllByRole('option');
+      const options = screen.getAllByRole('option');
       expect(options[1]).toHaveFocus();
 
       // Now, let's close the select component
-      act(() => {
-        getByTestId('select-backdrop').click();
+      await act(async () => {
+        screen.getByTestId('select-backdrop').click();
       });
-      act(() => {
-        clock.tick(0);
-      });
+      clock.tick(0);
 
-      expect(queryByRole('listbox')).to.equal(null);
+      expect(screen.queryByRole('listbox')).to.equal(null);
       expect(trigger).toHaveFocus();
     });
 
-    it('should be able to change the selected item', () => {
-      const { getAllByRole, getByRole, queryByRole } = render(<SelectAndDialog />);
+    it('should be able to change the selected item', async () => {
+      render(<SelectAndDialog />);
 
-      const trigger = getByRole('button');
-      expect(trigger).toHaveAccessibleName('Ten');
+      const trigger = screen.getByRole('combobox');
+      expect(trigger).toHaveAccessibleName('');
       // Let's open the select component
       // in the browser user click also focuses
       fireEvent.mouseDown(trigger);
 
-      const options = getAllByRole('option');
+      const options = screen.getAllByRole('option');
       expect(options[1]).toHaveFocus();
 
       // Now, let's close the select component
-      act(() => {
+      await act(async () => {
         options[2].click();
       });
-      act(() => {
-        clock.tick(0);
-      });
+      clock.tick(0);
 
-      expect(queryByRole('listbox')).to.equal(null);
+      expect(screen.queryByRole('listbox')).to.equal(null);
       expect(trigger).toHaveFocus();
       expect(trigger).to.have.text('Twenty');
     });
@@ -102,7 +85,7 @@ describe('<Select> integration', () => {
 
   describe('with label', () => {
     it('requires `id` and `labelId` for a proper accessible name', () => {
-      const { getByRole } = render(
+      render(
         <FormControl>
           <InputLabel id="label">Age</InputLabel>
           <Select id="input" labelId="label" value="10">
@@ -112,40 +95,46 @@ describe('<Select> integration', () => {
         </FormControl>,
       );
 
-      expect(getByRole('button')).toHaveAccessibleName('Age Ten');
+      expect(screen.getByRole('combobox')).toHaveAccessibleName('Age');
     });
 
     // we're somewhat abusing "focus" here. What we're actually interested in is
     // displaying it as "active". WAI-ARIA authoring practices do not consider the
     // the trigger part of the widget while a native <select /> will outline the trigger
     // as well
-    it('is displayed as focused while open', () => {
-      const { getByTestId, getByRole } = render(
+    it('is displayed as focused while open', async () => {
+      render(
         <FormControl>
           <InputLabel classes={{ focused: 'focused-label' }} data-testid="label">
             Age
           </InputLabel>
-          <Select value="">
+          <Select
+            MenuProps={{
+              transitionDuration: 0,
+            }}
+            value=""
+          >
             <MenuItem value="">none</MenuItem>
             <MenuItem value={10}>Ten</MenuItem>
           </Select>
         </FormControl>,
       );
 
-      const trigger = getByRole('button');
-      act(() => {
+      const trigger = screen.getByRole('combobox');
+      await act(async () => {
         trigger.focus();
       });
       fireEvent.keyDown(trigger, { key: 'Enter' });
+      clock.tick(0);
 
-      expect(getByTestId('label')).to.have.class('focused-label');
+      expect(screen.getByTestId('label')).to.have.class('focused-label');
     });
 
-    it('does not stays in an active state if an open action did not actually open', () => {
-      // test for https://github.com/mui-org/material-ui/issues/17294
+    it('does not stays in an active state if an open action did not actually open', async () => {
+      // test for https://github.com/mui/material-ui/issues/17294
       // we used to set a flag to stop blur propagation when we wanted to open the
       // select but never considered what happened if the select never opened
-      const { container, getByRole } = render(
+      const { container } = render(
         <FormControl>
           <InputLabel classes={{ focused: 'focused-label' }} htmlFor="age-simple">
             Age
@@ -156,9 +145,9 @@ describe('<Select> integration', () => {
           </Select>
         </FormControl>,
       );
-      const trigger = getByRole('button');
+      const trigger = screen.getByRole('combobox');
 
-      act(() => {
+      await act(async () => {
         trigger.focus();
       });
 
@@ -168,7 +157,7 @@ describe('<Select> integration', () => {
 
       expect(container.querySelector('[for="age-simple"]')).to.have.class('focused-label');
 
-      act(() => {
+      await act(async () => {
         trigger.blur();
       });
 

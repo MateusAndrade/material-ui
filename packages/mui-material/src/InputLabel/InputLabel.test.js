@@ -1,14 +1,16 @@
-import * as React from 'react';
+import { describe, it, expect } from 'vitest';
 import PropTypes from 'prop-types';
-import { expect } from 'chai';
-import { describeConformance, act, createClientRender } from 'test/utils';
+import { act, createRenderer, screen } from '@mui/internal-test-utils';
+import { ClassNames } from '@emotion/react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Input from '@mui/material/Input';
 import FormLabel from '@mui/material/FormLabel';
 import InputLabel, { inputLabelClasses as classes } from '@mui/material/InputLabel';
+import describeConformance from '../../test/describeConformance';
 
 describe('<InputLabel />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<InputLabel>Foo</InputLabel>, () => ({
     classes,
@@ -17,7 +19,6 @@ describe('<InputLabel />', () => {
     refInstanceof: window.HTMLLabelElement,
     muiName: 'MuiInputLabel',
     testVariantProps: { size: 'small' },
-    skip: ['componentsProp'],
   }));
 
   it('should render a label with text', () => {
@@ -47,22 +48,23 @@ describe('<InputLabel />', () => {
 
   describe('with FormControl', () => {
     it('should have the formControl class', () => {
-      const { getByTestId } = render(
+      render(
         <FormControl>
           <InputLabel data-testid="root" />
         </FormControl>,
       );
-      expect(getByTestId('root')).to.have.class(classes.formControl);
+
+      expect(screen.getByTestId('root')).to.have.class(classes.formControl);
     });
 
     it('should have the small class', () => {
-      const { getByTestId } = render(
+      render(
         <FormControl size="small">
           <InputLabel data-testid="root" />
         </FormControl>,
       );
 
-      expect(getByTestId('root')).to.have.class(classes.sizeSmall);
+      expect(screen.getByTestId('root')).to.have.class(classes.sizeSmall);
     });
 
     describe('filled', () => {
@@ -76,17 +78,17 @@ describe('<InputLabel />', () => {
           );
         }
         Wrapper.propTypes = { children: PropTypes.node };
-        const { getByTestId, setProps } = render(<InputLabel data-testid="root">name</InputLabel>, {
+        const { setProps } = render(<InputLabel data-testid="root">name</InputLabel>, {
           wrapper: Wrapper,
         });
 
-        expect(getByTestId('root')).to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).to.have.class(classes.shrink);
 
         setProps({ shrink: false });
-        expect(getByTestId('root')).not.to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).not.to.have.class(classes.shrink);
 
         setProps({ shrink: true });
-        expect(getByTestId('root')).to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).to.have.class(classes.shrink);
       });
     });
 
@@ -102,21 +104,97 @@ describe('<InputLabel />', () => {
         }
         Wrapper.propTypes = { children: PropTypes.node };
 
-        const { container, getByTestId, setProps } = render(<InputLabel data-testid="root" />, {
+        const { container, setProps } = render(<InputLabel data-testid="root" />, {
           wrapper: Wrapper,
         });
         act(() => {
           container.querySelector('input').focus();
         });
 
-        expect(getByTestId('root')).to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).to.have.class(classes.shrink);
 
         setProps({ shrink: false });
-        expect(getByTestId('root')).not.to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).not.to.have.class(classes.shrink);
 
         setProps({ shrink: true });
-        expect(getByTestId('root')).to.have.class(classes.shrink);
+        expect(screen.getByTestId('root')).to.have.class(classes.shrink);
       });
+
+      it('provides ownerState.focused in styleOverrides', () => {
+        const theme = createTheme({
+          components: {
+            MuiInputLabel: {
+              styleOverrides: {
+                root: (props) => {
+                  return {
+                    ...(props.ownerState.focused === true && {
+                      mixBlendMode: 'darken',
+                    }),
+                  };
+                },
+              },
+            },
+          },
+        });
+
+        render(
+          <ThemeProvider theme={theme}>
+            <FormControl focused>
+              <InputLabel>Test Label</InputLabel>
+            </FormControl>
+          </ThemeProvider>,
+        );
+
+        const label = screen.getByText('Test Label');
+
+        expect(label).to.toHaveComputedStyle({
+          mixBlendMode: 'darken',
+        });
+      });
+    });
+  });
+
+  describe('Emotion compatibility', () => {
+    it('classes.root should overwrite built-in styles.', () => {
+      const text = 'The label';
+
+      render(
+        <ClassNames>
+          {({ css }) => (
+            <FormControl>
+              <InputLabel classes={{ root: css({ position: 'static' }) }}>{text}</InputLabel>
+            </FormControl>
+          )}
+        </ClassNames>,
+      );
+
+      const label = screen.getByText(text);
+
+      expect(getComputedStyle(label).position).to.equal('static');
+    });
+
+    it('className should overwrite classes.root and built-in styles.', () => {
+      const text = 'The label';
+
+      render(
+        <ClassNames>
+          {({ css }) => (
+            <FormControl>
+              <InputLabel
+                color="primary"
+                className={css({ position: 'static' })}
+                classes={{ root: css({ position: 'sticky' }) }}
+              >
+                {text}
+              </InputLabel>
+            </FormControl>
+          )}
+        </ClassNames>,
+      );
+
+      const label = screen.getByText(text);
+
+      expect(getComputedStyle(label).position).to.equal('static');
     });
   });
 });

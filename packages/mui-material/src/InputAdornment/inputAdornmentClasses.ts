@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface InputAdornmentClasses {
   /** Styles applied to the root element. */
@@ -15,9 +16,9 @@ export interface InputAdornmentClasses {
   positionEnd: string;
   /** Styles applied to the root element if `disablePointerEvents={true}`. */
   disablePointerEvents: string;
-  /** Styles applied if the adornment is used inside <FormControl hiddenLabel />. */
+  /** Styles applied if the adornment is used inside `<FormControl hiddenLabel />`. */
   hiddenLabel: string;
-  /** Styles applied if the adornment is used inside <FormControl size="small" />. */
+  /** Styles applied if the adornment is used inside `<FormControl size="small" />`. */
   sizeSmall: string;
 }
 

@@ -1,15 +1,21 @@
+'use client';
 // @inheritedComponent IconButton
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { refType } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { alpha, darken, lighten } from '@mui/system';
+import composeClasses from '@mui/utils/composeClasses';
 import capitalize from '../utils/capitalize';
+import createSimplePaletteValueFilter from '../utils/createSimplePaletteValueFilter';
 import SwitchBase from '../internal/SwitchBase';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import switchClasses, { getSwitchUtilityClass } from './switchClasses';
+import buttonBaseClasses from '../ButtonBase/buttonBaseClasses';
+import { outsetFocusRing } from '../styles/focusVisible';
+import { mergeSlotProps } from '../utils';
+import useSlot from '../utils/useSlot';
+import { getTransitionStyles } from '../transitions/utils';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, edge, size, color, checked, disabled } = ownerState;
@@ -47,7 +53,7 @@ const SwitchRoot = styled('span', {
       styles[`size${capitalize(ownerState.size)}`],
     ];
   },
-})(({ ownerState }) => ({
+})({
   display: 'inline-flex',
   width: 34 + 12 * 2,
   height: 14 + 12 * 2,
@@ -61,28 +67,35 @@ const SwitchRoot = styled('span', {
   '@media print': {
     colorAdjust: 'exact',
   },
-  ...(ownerState.edge === 'start' && {
-    marginLeft: -8,
-  }),
-  ...(ownerState.edge === 'end' && {
-    marginRight: -8,
-  }),
-  ...(ownerState.size === 'small' && {
-    width: 40,
-    height: 24,
-    padding: 7,
-    [`& .${switchClasses.thumb}`]: {
-      width: 16,
-      height: 16,
+  variants: [
+    {
+      props: { edge: 'start' },
+      style: { marginLeft: -8 },
     },
-    [`& .${switchClasses.switchBase}`]: {
-      padding: 4,
-      [`&.${switchClasses.checked}`]: {
-        transform: 'translateX(16px)',
+    {
+      props: { edge: 'end' },
+      style: { marginRight: -8 },
+    },
+    {
+      props: { size: 'small' },
+      style: {
+        width: 40,
+        height: 24,
+        padding: 7,
+        [`& .${switchClasses.thumb}`]: {
+          width: 16,
+          height: 16,
+        },
+        [`& .${switchClasses.switchBase}`]: {
+          padding: 4,
+          [`&.${switchClasses.checked}`]: {
+            transform: 'translateX(16px)',
+          },
+        },
       },
     },
-  }),
-}));
+  ],
+});
 
 const SwitchSwitchBase = styled(SwitchBase, {
   name: 'MuiSwitch',
@@ -97,98 +110,203 @@ const SwitchSwitchBase = styled(SwitchBase, {
     ];
   },
 })(
-  ({ theme }) => ({
+  memoTheme(({ theme }) => ({
     position: 'absolute',
     top: 0,
     left: 0,
     zIndex: 1, // Render above the focus ripple.
-    color: theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.grey[300],
-    transition: theme.transitions.create(['left', 'transform'], {
+    color: theme.vars
+      ? theme.vars.palette.Switch.defaultColor
+      : `${theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.grey[300]}`,
+    ...getTransitionStyles(theme, ['left', 'transform'], {
       duration: theme.transitions.duration.shortest,
     }),
     [`&.${switchClasses.checked}`]: {
       transform: 'translateX(20px)',
     },
     [`&.${switchClasses.disabled}`]: {
-      color: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[600],
+      color: theme.vars
+        ? theme.vars.palette.Switch.defaultDisabledColor
+        : `${theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[600]}`,
     },
-    [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
-      opacity: 0.5,
-    },
-    [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
-      opacity: theme.palette.mode === 'light' ? 0.12 : 0.2,
-    },
+    ...(theme.focusVisible
+      ? {
+          // when focusVisible is enabled, the styles must not rely on `opacity` so that the ring is visible on the track slot.
+          [`&.${buttonBaseClasses.focusVisible} ~ .${switchClasses.track}`]: {
+            ...outsetFocusRing,
+            ...theme.focusVisible,
+          },
+          // mirrors the non-focusVisible `opacity: 0.5`; must stay BEFORE the disabled rule so
+          // disabled wins the checked+disabled combination at equal specificity.
+          [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+            backgroundColor: theme.alpha(
+              theme.vars
+                ? theme.vars.palette.common.onBackground
+                : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+              0.5,
+            ),
+          },
+          [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
+            backgroundColor: theme.alpha(
+              theme.vars
+                ? theme.vars.palette.common.onBackground
+                : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+              theme.vars
+                ? theme.vars.opacity.switchTrackDisabled
+                : `${theme.palette.mode === 'light' ? 0.12 : 0.2}`,
+            ),
+          },
+        }
+      : {
+          [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+            opacity: 0.5,
+          },
+          [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
+            opacity: theme.vars
+              ? theme.vars.opacity.switchTrackDisabled
+              : `${theme.palette.mode === 'light' ? 0.12 : 0.2}`,
+          },
+        }),
     [`& .${switchClasses.input}`]: {
       left: '-100%',
       width: '300%',
     },
-  }),
-  ({ theme, ownerState }) => ({
+  })),
+  memoTheme(({ theme }) => ({
     '&:hover': {
-      backgroundColor: alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
+      backgroundColor: theme.alpha(
+        (theme.vars || theme).palette.action.active,
+        (theme.vars || theme).palette.action.hoverOpacity,
+      ),
       // Reset on touch devices, it doesn't add specificity
       '@media (hover: none)': {
         backgroundColor: 'transparent',
       },
     },
-    ...(ownerState.color !== 'default' && {
-      [`&.${switchClasses.checked}`]: {
-        color: theme.palette[ownerState.color].main,
-        '&:hover': {
-          backgroundColor: alpha(
-            theme.palette[ownerState.color].main,
-            theme.palette.action.hoverOpacity,
-          ),
-          '@media (hover: none)': {
-            backgroundColor: 'transparent',
+    variants: [
+      ...Object.entries(theme.palette)
+        .filter(createSimplePaletteValueFilter(['light'])) // check all the used fields in the style below
+        .map(([color]) => ({
+          props: { color },
+          style: {
+            [`&.${switchClasses.checked}`]: {
+              color: (theme.vars || theme).palette[color].main,
+              '&:hover': {
+                backgroundColor: theme.alpha(
+                  (theme.vars || theme).palette[color].main,
+                  (theme.vars || theme).palette.action.hoverOpacity,
+                ),
+                '@media (hover: none)': {
+                  backgroundColor: 'transparent',
+                },
+              },
+              [`&.${switchClasses.disabled}`]: {
+                color: theme.vars
+                  ? theme.vars.palette.Switch[`${color}DisabledColor`]
+                  : `${
+                      theme.palette.mode === 'light'
+                        ? theme.lighten(theme.palette[color].main, 0.62)
+                        : theme.darken(theme.palette[color].main, 0.55)
+                    }`,
+              },
+            },
+            [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+              backgroundColor: (theme.vars || theme).palette[color].main,
+            },
+            ...(theme.focusVisible && {
+              [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
+                backgroundColor: theme.alpha((theme.vars || theme).palette[color].main, 0.5),
+              },
+              [`&.${switchClasses.disabled} + .${switchClasses.track}`]: {
+                backgroundColor: theme.alpha(
+                  theme.vars
+                    ? theme.vars.palette.common.onBackground
+                    : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+                  theme.vars
+                    ? theme.vars.opacity.switchTrackDisabled
+                    : `${theme.palette.mode === 'light' ? 0.12 : 0.2}`,
+                ),
+              },
+              [`&.${switchClasses.checked}.${switchClasses.disabled} + .${switchClasses.track}`]: {
+                backgroundColor: theme.alpha(
+                  (theme.vars || theme).palette[color].main,
+                  theme.vars
+                    ? theme.vars.opacity.switchTrackDisabled
+                    : `${theme.palette.mode === 'light' ? 0.12 : 0.2}`,
+                ),
+              },
+            }),
           },
-        },
-        [`&.${switchClasses.disabled}`]: {
-          color:
-            theme.palette.mode === 'light'
-              ? lighten(theme.palette[ownerState.color].main, 0.62)
-              : darken(theme.palette[ownerState.color].main, 0.55),
-        },
-      },
-      [`&.${switchClasses.checked} + .${switchClasses.track}`]: {
-        backgroundColor: theme.palette[ownerState.color].main,
-      },
-    }),
-  }),
+        })),
+    ],
+  })),
 );
 
 const SwitchTrack = styled('span', {
   name: 'MuiSwitch',
   slot: 'Track',
-  overridesResolver: (props, styles) => styles.track,
-})(({ theme }) => ({
-  height: '100%',
-  width: '100%',
-  borderRadius: 14 / 2,
-  zIndex: -1,
-  transition: theme.transitions.create(['opacity', 'background-color'], {
-    duration: theme.transitions.duration.shortest,
-  }),
-  backgroundColor:
-    theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white,
-  opacity: theme.palette.mode === 'light' ? 0.38 : 0.3,
-}));
+})(
+  memoTheme(({ theme }) => ({
+    height: '100%',
+    width: '100%',
+    borderRadius: 14 / 2,
+    zIndex: -1,
+    ...getTransitionStyles(theme, ['opacity', 'background-color'], {
+      duration: theme.transitions.duration.shortest,
+    }),
+    '@media (forced-colors: active)': {
+      boxSizing: 'border-box',
+      border: '1px solid ButtonBorder',
+    },
+    ...(theme.focusVisible
+      ? {
+          backgroundColor: theme.alpha(
+            theme.vars
+              ? theme.vars.palette.common.onBackground
+              : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+            theme.vars
+              ? theme.vars.opacity.switchTrack
+              : `${theme.palette.mode === 'light' ? 0.38 : 0.3}`,
+          ),
+        }
+      : {
+          backgroundColor: theme.vars
+            ? theme.vars.palette.common.onBackground
+            : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+          opacity: theme.vars
+            ? theme.vars.opacity.switchTrack
+            : `${theme.palette.mode === 'light' ? 0.38 : 0.3}`,
+        }),
+  })),
+);
 
 const SwitchThumb = styled('span', {
   name: 'MuiSwitch',
   slot: 'Thumb',
-  overridesResolver: (props, styles) => styles.thumb,
-})(({ theme }) => ({
-  boxShadow: theme.shadows[1],
-  backgroundColor: 'currentColor',
-  width: 20,
-  height: 20,
-  borderRadius: '50%',
-}));
+})(
+  memoTheme(({ theme }) => ({
+    boxShadow: (theme.vars || theme).shadows[1],
+    backgroundColor: 'currentColor',
+    boxSizing: 'border-box',
+    border: '1px solid transparent',
+    width: 20,
+    height: 20,
+    borderRadius: '50%',
+  })),
+);
 
 const Switch = React.forwardRef(function Switch(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiSwitch' });
-  const { className, color = 'primary', edge = false, size = 'medium', sx, ...other } = props;
+  const props = useDefaultProps({ props: inProps, name: 'MuiSwitch' });
+  const {
+    className,
+    color = 'primary',
+    edge = false,
+    size = 'medium',
+    sx,
+    slots = {},
+    slotProps = {},
+    ...other
+  } = props;
 
   const ownerState = {
     ...props,
@@ -198,10 +316,41 @@ const Switch = React.forwardRef(function Switch(inProps, ref) {
   };
 
   const classes = useUtilityClasses(ownerState);
-  const icon = <SwitchThumb className={classes.thumb} ownerState={ownerState} />;
+  const externalInputProps = slotProps.input;
+
+  const externalForwardedProps = {
+    slots,
+    slotProps,
+  };
+
+  const [RootSlot, rootSlotProps] = useSlot('root', {
+    className: clsx(classes.root, className),
+    elementType: SwitchRoot,
+    externalForwardedProps,
+    ownerState,
+    additionalProps: {
+      sx,
+    },
+  });
+
+  const [ThumbSlot, thumbSlotProps] = useSlot('thumb', {
+    className: classes.thumb,
+    elementType: SwitchThumb,
+    externalForwardedProps,
+    ownerState,
+  });
+
+  const icon = <ThumbSlot {...thumbSlotProps} />;
+
+  const [TrackSlot, trackSlotProps] = useSlot('track', {
+    className: classes.track,
+    elementType: SwitchTrack,
+    externalForwardedProps,
+    ownerState,
+  });
 
   return (
-    <SwitchRoot className={clsx(classes.root, className)} sx={sx} ownerState={ownerState}>
+    <RootSlot {...rootSlotProps}>
       <SwitchSwitchBase
         type="checkbox"
         icon={icon}
@@ -213,17 +362,37 @@ const Switch = React.forwardRef(function Switch(inProps, ref) {
           ...classes,
           root: classes.switchBase,
         }}
+        slots={{
+          ...(slots.switchBase && { root: slots.switchBase }),
+          ...(slots.input && { input: slots.input }),
+        }}
+        slotProps={{
+          ...(slotProps.switchBase && {
+            root:
+              typeof slotProps.switchBase === 'function'
+                ? slotProps.switchBase(ownerState)
+                : slotProps.switchBase,
+          }),
+          input: mergeSlotProps(
+            typeof externalInputProps === 'function'
+              ? externalInputProps(ownerState)
+              : externalInputProps,
+            {
+              role: 'switch',
+            },
+          ),
+        }}
       />
-      <SwitchTrack className={classes.track} ownerState={ownerState} />
-    </SwitchRoot>
+      <TrackSlot {...trackSlotProps} />
+    </RootSlot>
   );
 });
 
 Switch.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * If `true`, the component is checked.
    */
@@ -237,11 +406,13 @@ Switch.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
-   * The color of the component. It supports those theme colors that make sense for this component.
+   * The color of the component.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
    * @default 'primary'
    */
   color: PropTypes /* @typescript-to-proptypes-ignore */.oneOfType([
@@ -258,6 +429,7 @@ Switch.propTypes /* remove-proptypes */ = {
   disabled: PropTypes.bool,
   /**
    * If `true`, the ripple effect is disabled.
+   * @default false
    */
   disableRipple: PropTypes.bool,
   /**
@@ -277,14 +449,6 @@ Switch.propTypes /* remove-proptypes */ = {
    */
   id: PropTypes.string,
   /**
-   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
-   */
-  inputProps: PropTypes.object,
-  /**
-   * Pass a ref to the `input` element.
-   */
-  inputRef: refType,
-  /**
    * Callback fired when the state is changed.
    *
    * @param {React.ChangeEvent<HTMLInputElement>} event The event source of the callback.
@@ -294,6 +458,7 @@ Switch.propTypes /* remove-proptypes */ = {
   onChange: PropTypes.func,
   /**
    * If `true`, the `input` element is required.
+   * @default false
    */
   required: PropTypes.bool,
   /**
@@ -306,9 +471,35 @@ Switch.propTypes /* remove-proptypes */ = {
     PropTypes.string,
   ]),
   /**
+   * The props used for each slot inside.
+   * @default {}
+   */
+  slotProps: PropTypes.shape({
+    input: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    root: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    switchBase: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    thumb: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    track: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  }),
+  /**
+   * The components used for each slot inside.
+   * @default {}
+   */
+  slots: PropTypes.shape({
+    input: PropTypes.elementType,
+    root: PropTypes.elementType,
+    switchBase: PropTypes.elementType,
+    thumb: PropTypes.elementType,
+    track: PropTypes.elementType,
+  }),
+  /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The value of the component. The DOM API casts this to a string.
    * The browser uses "on" as the default value.

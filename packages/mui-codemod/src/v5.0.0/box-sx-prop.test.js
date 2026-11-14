@@ -1,5 +1,5 @@
+import { describe, it, expect } from 'vitest';
 import path from 'path';
-import { expect } from 'chai';
 import jscodeshift from 'jscodeshift';
 import transform from './box-sx-prop';
 import readFile from '../util/readFile';
@@ -36,6 +36,34 @@ describe('@mui/codemod', () => {
         );
 
         const expected = read('./box-sx-prop.test/expected.js');
+        expect(actual).to.equal(expected, 'The transformed version should be correct');
+      });
+
+      it('alias, transforms props as needed', () => {
+        const actual = transform(
+          {
+            source: read('./box-sx-prop.test/alias-actual.js'),
+            path: require.resolve('./box-sx-prop.test/alias-actual.js'),
+          },
+          { jscodeshift },
+          {},
+        );
+
+        const expected = read('./box-sx-prop.test/alias-expected.js');
+        expect(actual).to.equal(expected, 'The transformed version should be correct');
+      });
+
+      it('alias, should be idempotent', () => {
+        const actual = transform(
+          {
+            source: read('./box-sx-prop.test/alias-expected.js'),
+            path: require.resolve('./box-sx-prop.test/alias-expected.js'),
+          },
+          { jscodeshift },
+          {},
+        );
+
+        const expected = read('./box-sx-prop.test/alias-expected.js');
         expect(actual).to.equal(expected, 'The transformed version should be correct');
       });
     });

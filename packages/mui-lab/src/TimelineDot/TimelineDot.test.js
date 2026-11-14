@@ -1,10 +1,11 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { createRenderer } from '@mui/internal-test-utils';
 import TimelineDot, { timelineDotClasses as classes } from '@mui/lab/TimelineDot';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TimelineDot />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<TimelineDot />, () => ({
     classes,
@@ -13,7 +14,7 @@ describe('<TimelineDot />', () => {
     muiName: 'MuiTimelineDot',
     refInstanceof: window.HTMLSpanElement,
     testVariantProps: { color: 'secondary', variant: 'outlined' },
-    skip: ['componentProp', 'componentsProp'],
+    skip: ['componentProp'],
   }));
 
   it('should render with color inherit', () => {

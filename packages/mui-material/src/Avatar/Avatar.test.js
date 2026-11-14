@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, fireEvent, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, fireEvent } from '@mui/internal-test-utils';
 import { spy } from 'sinon';
 import Avatar, { avatarClasses as classes } from '@mui/material/Avatar';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CancelIcon from '../internal/svg-icons/Cancel';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Avatar />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<Avatar />, () => ({
     classes,
@@ -18,7 +19,28 @@ describe('<Avatar />', () => {
     testDeepOverrides: { slotName: 'fallback', slotClassName: classes.fallback },
     testVariantProps: { variant: 'foo' },
     testStateOverrides: { prop: 'variant', value: 'rounded', styleKey: 'rounded' },
-    skip: ['componentsProp'],
+    slots: {
+      root: {
+        expectedClassName: classes.root,
+      },
+      fallback: {
+        expectedClassName: classes.fallback,
+      },
+    },
+  }));
+
+  // img slot only renders when src is provided
+  describeConformance(<Avatar src="/fake.png" />, () => ({
+    classes,
+    render,
+    refInstanceof: window.HTMLDivElement,
+    muiName: 'MuiAvatar',
+    slots: {
+      img: {
+        expectedClassName: classes.img,
+      },
+    },
+    only: ['slotsProp', 'slotPropsProp'],
   }));
 
   describe('image avatar', () => {
@@ -44,12 +66,26 @@ describe('<Avatar />', () => {
       expect(img).to.have.attribute('src', '/fake.png');
     });
 
-    it('should be able to add more props to the image', () => {
+    it('should be able to add more props to the img slot', () => {
       const onError = spy();
-      const { container } = render(<Avatar src="/fake.png" imgProps={{ onError }} />);
+      const { container } = render(<Avatar src="/fake.png" slotProps={{ img: { onError } }} />);
       const img = container.querySelector('img');
       fireEvent.error(img);
       expect(onError.callCount).to.equal(1);
+    });
+
+    it('should pass slots.img to `useLoaded` hook', () => {
+      const originalImage = globalThis.Image;
+      const image = {};
+      globalThis.Image = function Image() {
+        return image;
+      };
+
+      render(<Avatar src="/fake.png" slotProps={{ img: { crossOrigin: 'anonymous' } }} />);
+
+      expect(image.crossOrigin).to.equal('anonymous');
+
+      globalThis.Image = originalImage;
     });
   });
 
@@ -60,14 +96,6 @@ describe('<Avatar />', () => {
       const imgs = container.querySelectorAll('img');
       expect(imgs.length).to.equal(1);
       expect(avatar).to.have.text('');
-    });
-
-    it('should be able to add more props to the image', () => {
-      const onError = spy();
-      const { container } = render(<Avatar src="/fake.png" imgProps={{ onError }} />);
-      const img = container.querySelector('img');
-      fireEvent.error(img);
-      expect(onError.callCount).to.equal(1);
     });
   });
 
@@ -210,6 +238,70 @@ describe('<Avatar />', () => {
       const avatar = container.firstChild;
 
       expect(avatar).to.have.class(classes.colorDefault);
+    });
+
+    it('should fallback if children is empty string', () => {
+      const container = render(<Avatar>{''}</Avatar>).container;
+      const avatar = container.firstChild;
+
+      expect(avatar.firstChild).to.have.attribute('data-testid', 'PersonIcon');
+    });
+
+    it('should fallback if children is false', () => {
+      const container = render(<Avatar>{false}</Avatar>).container;
+      const avatar = container.firstChild;
+
+      expect(avatar.firstChild).to.have.attribute('data-testid', 'PersonIcon');
+    });
+  });
+
+  it('should not throw error when ownerState is used in styleOverrides', () => {
+    const theme = createTheme({
+      components: {
+        MuiAvatar: {
+          styleOverrides: {
+            root: ({ ownerState }) => ({
+              ...(ownerState.variant === 'rounded' && {
+                color: 'red',
+              }),
+            }),
+          },
+        },
+      },
+    });
+
+    expect(() =>
+      render(
+        <ThemeProvider theme={theme}>
+          <Avatar variant="rounded" />
+        </ThemeProvider>,
+      ),
+    ).not.to.throw();
+  });
+
+  describe('WCAG 2.2 conformance', () => {
+    describe('1.3.1 Info and Relationships', () => {
+      it('renders a generic root with no ARIA role', () => {
+        const { container } = render(<Avatar alt="Remy Sharp" src="/fake.png" />);
+        expect(container.firstChild).to.have.tagName('div');
+        expect(container.firstChild).not.to.have.attribute('role');
+      });
+
+      it('hides the Person fallback from assistive technology', () => {
+        const { container } = render(<Avatar />);
+        const fallback = container.querySelector('svg');
+        expect(fallback).to.have.attribute('data-testid', 'PersonIcon');
+        expect(fallback).to.have.attribute('aria-hidden', 'true');
+      });
+
+      it('hides a decorative SvgIcon child from assistive technology', () => {
+        const { container } = render(
+          <Avatar>
+            <CancelIcon />
+          </Avatar>,
+        );
+        expect(container.querySelector('svg')).to.have.attribute('aria-hidden', 'true');
+      });
     });
   });
 });

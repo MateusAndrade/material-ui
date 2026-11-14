@@ -1,6 +1,5 @@
-import React from 'react';
-import { styled } from '@mui/material/styles';
 import Typography from '@material-ui/core/Typography';
+import { styled } from '@mui/material/styles';
 import Container from 'modules/components/Container';
 import Button from 'modules/components/Button';
 import Link from 'modules/components/Link';
@@ -40,7 +39,7 @@ const Root = styled('div')((
       flexDirection: 'column',
       position: 'relative',
       alignItems: 'center',
-      // Fix IE11 issue
+      // Fix IE 11 issue
       marginRight: 0,
       marginLeft: 0,
       padding: theme.spacing(0, 2),
@@ -68,16 +67,15 @@ function SellHero() {
           Sell themes
         </Typography>
         <Typography component="h2" align="center" variant="h3" color="textSecondary">
-          {'Build your React themes business on the official MUI store.'}
+          {'Build your React themes business on the official MUI Store.'}
         </Typography>
         <div className={classes.actions}>
           <Button
             variant="contained"
             component={Link}
             naked
-            to="https://material-ui.zendesk.com/hc/en-us/articles/360008775380-How-do-I-apply-to-be-a-contributor-"
+            to="https://support.mui.com/hc/en-us/articles/360008775380-How-do-I-apply-to-be-a-contributor-"
             target="_blank"
-            rel="noopener"
             className={classes.apply}
           >
             Apply now

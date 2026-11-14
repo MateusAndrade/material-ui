@@ -1,80 +1,11 @@
-import * as React from 'react';
-import { DistributiveOmit } from '@mui/types';
-import { StyledComponentProps } from './styles';
-
-export { StyledComponentProps };
-
-/**
- * All standard components exposed by `material-ui` are `StyledComponents` with
- * certain `classes`, on which one can also set a top-level `className` and inline
- * `style`.
- * @deprecated will be removed in v5 for internal usage only
- */
-export type StandardProps<
-  C,
-  ClassKey extends string,
-  Removals extends keyof C = never,
-> = DistributiveOmit<C, 'classes' | Removals> &
-  StyledComponentProps<ClassKey> & {
-    className?: string;
-    ref?: C extends { ref?: infer RefType } ? RefType : React.Ref<unknown>;
-    style?: React.CSSProperties;
-  };
-
-/**
- * @internal
- * ONLY USE FROM WITHIN mui-org/material-ui
- *
- * Internal helper type for conform (describeConformance) components
- * However, we don't declare classes on this type.
- * It is recommended to declare them manually with an interface so that each class can have a separate JSDoc.
- */
-export type InternalStandardProps<C, Removals extends keyof C = never> = DistributiveOmit<
-  C,
-  'classes' | Removals
-> &
-  // each component declares it's classes in a separate interface for proper JSDoc
-  StyledComponentProps<never> & {
-    ref?: C extends { ref?: infer RefType } ? RefType : React.Ref<unknown>;
-    // TODO: Remove implicit props. Up to each component.
-    className?: string;
-    style?: React.CSSProperties;
-  };
-
-export type PaletteMode = 'light' | 'dark';
-export interface Color {
-  50: string;
-  100: string;
-  200: string;
-  300: string;
-  400: string;
-  500: string;
-  600: string;
-  700: string;
-  800: string;
-  900: string;
-  A100: string;
-  A200: string;
-  A400: string;
-  A700: string;
-}
-
-export namespace PropTypes {
-  // keeping the type structure for backwards compat
-  // eslint-disable-next-line @typescript-eslint/no-shadow, @typescript-eslint/no-unused-vars
-  type Color = 'inherit' | 'primary' | 'secondary' | 'default';
-}
-
 // From index.js
-// eslint-disable-next-line import/first
+
 import * as colors from './colors';
 
 export { colors };
 export * from './styles';
 
 export * from './utils';
-
-export * from '@mui/core';
 
 export { default as Accordion } from './Accordion';
 export * from './Accordion';
@@ -172,6 +103,9 @@ export * from './Container';
 export { default as CssBaseline } from './CssBaseline';
 export * from './CssBaseline';
 
+/**
+ * @deprecated use color-scheme in CssBaseline or ScopedCssBaseline to modify scrollbar color
+ */
 export { default as darkScrollbar } from './darkScrollbar';
 export * from './darkScrollbar';
 
@@ -225,9 +159,6 @@ export * from './Grid';
 
 export { default as Grow } from './Grow';
 export * from './Grow';
-
-export { default as Hidden } from './Hidden';
-export * from './Hidden';
 
 export { default as Icon } from './Icon';
 export * from './Icon';
@@ -325,6 +256,9 @@ export * from './Popover';
 export { default as Popper } from './Popper';
 export * from './Popper';
 
+export { default as Portal } from './Portal';
+export * from './Portal';
+
 export { default as Radio } from './Radio';
 export * from './Radio';
 
@@ -421,6 +355,9 @@ export * from './TableHead';
 export { default as TablePagination } from './TablePagination';
 export * from './TablePagination';
 
+export { default as TablePaginationActions } from './TablePaginationActions';
+export * from './TablePaginationActions';
+
 export { default as TableRow } from './TableRow';
 export * from './TableRow';
 
@@ -457,6 +394,9 @@ export * from './Typography';
 export { default as useMediaQuery } from './useMediaQuery';
 export * from './useMediaQuery';
 
+export { default as usePagination } from './usePagination';
+export * from './usePagination';
+
 export { default as useScrollTrigger } from './useScrollTrigger';
 export * from './useScrollTrigger';
 
@@ -469,7 +409,16 @@ export * from './useAutocomplete';
 export { default as GlobalStyles } from './GlobalStyles';
 export * from './GlobalStyles';
 
-/**
- * @deprecated will be removed in v5.beta, please use StyledEngineProvider from @mui/material/styles instead
- */
-export { StyledEngineProvider } from './styles';
+export * from './version';
+
+export { default as unstable_composeClasses } from '@mui/utils/composeClasses';
+
+export { default as generateUtilityClass } from './generateUtilityClass';
+export * from './generateUtilityClass';
+
+export { default as generateUtilityClasses } from './generateUtilityClasses';
+
+export { default as Unstable_TrapFocus } from './Unstable_TrapFocus';
+export * from './Unstable_TrapFocus';
+
+export { default as InitColorSchemeScript } from './InitColorSchemeScript';

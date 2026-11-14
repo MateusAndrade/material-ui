@@ -1,12 +1,13 @@
+import { describe, it, expect } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
-import { describeConformance, createClientRender } from 'test/utils';
+import { createRenderer } from '@mui/internal-test-utils';
 import ListSubheader, { listSubheaderClasses } from '@mui/material/ListSubheader';
 import ListItem, { listItemClasses } from '@mui/material/ListItem';
 import List, { listClasses as classes } from '@mui/material/List';
+import describeConformance from '../../test/describeConformance';
 
 describe('<List />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<List />, () => ({
     classes,
@@ -15,7 +16,6 @@ describe('<List />', () => {
     muiName: 'MuiList',
     refInstanceof: window.HTMLUListElement,
     testVariantProps: { disablePadding: true },
-    skip: ['componentsProp'],
   }));
 
   it('should render with padding classes', () => {

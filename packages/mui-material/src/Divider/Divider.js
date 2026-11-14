@@ -1,26 +1,24 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { alpha } from '@mui/system';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { getDividerUtilityClass } from './dividerClasses';
 
 const useUtilityClasses = (ownerState) => {
-  const { absolute, children, classes, flexItem, light, orientation, textAlign, variant } =
-    ownerState;
+  const { absolute, children, classes, flexItem, orientation, textAlign, variant } = ownerState;
 
   const slots = {
     root: [
       'root',
       absolute && 'absolute',
       variant,
-      light && 'light',
       orientation === 'vertical' && 'vertical',
       flexItem && 'flexItem',
       children && 'withChildren',
-      children && orientation === 'vertical' && 'withChildrenVertical',
       textAlign === 'right' && orientation !== 'vertical' && 'textAlignRight',
       textAlign === 'left' && orientation !== 'vertical' && 'textAlignLeft',
     ],
@@ -40,11 +38,9 @@ const DividerRoot = styled('div', {
       styles.root,
       ownerState.absolute && styles.absolute,
       styles[ownerState.variant],
-      ownerState.light && styles.light,
       ownerState.orientation === 'vertical' && styles.vertical,
       ownerState.flexItem && styles.flexItem,
       ownerState.children && styles.withChildren,
-      ownerState.children && ownerState.orientation === 'vertical' && styles.withChildrenVertical,
       ownerState.textAlign === 'right' &&
         ownerState.orientation !== 'vertical' &&
         styles.textAlignRight,
@@ -54,95 +50,133 @@ const DividerRoot = styled('div', {
     ];
   },
 })(
-  ({ theme, ownerState }) => ({
+  memoTheme(({ theme }) => ({
     margin: 0, // Reset browser default style.
     flexShrink: 0,
     borderWidth: 0,
     borderStyle: 'solid',
-    borderColor: theme.palette.divider,
+    borderColor: (theme.vars || theme).palette.divider,
     borderBottomWidth: 'thin',
-    ...(ownerState.absolute && {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      width: '100%',
-    }),
-    ...(ownerState.light && {
-      borderColor: alpha(theme.palette.divider, 0.08),
-    }),
-    ...(ownerState.variant === 'inset' && {
-      marginLeft: 72,
-    }),
-    ...(ownerState.variant === 'middle' &&
-      ownerState.orientation === 'horizontal' && {
-        marginLeft: theme.spacing(2),
-        marginRight: theme.spacing(2),
-      }),
-    ...(ownerState.variant === 'middle' &&
-      ownerState.orientation === 'vertical' && {
-        marginTop: theme.spacing(1),
-        marginBottom: theme.spacing(1),
-      }),
-    ...(ownerState.orientation === 'vertical' && {
-      height: '100%',
-      borderBottomWidth: 0,
-      borderRightWidth: 'thin',
-    }),
-    ...(ownerState.flexItem && {
-      alignSelf: 'stretch',
-      height: 'auto',
-    }),
-  }),
-  ({ theme, ownerState }) => ({
-    ...(ownerState.children && {
-      display: 'flex',
-      whiteSpace: 'nowrap',
-      textAlign: 'center',
-      border: 0,
-      '&::before, &::after': {
-        position: 'relative',
-        width: '100%',
-        borderTop: `thin solid ${theme.palette.divider}`,
-        top: '50%',
-        content: '""',
-        transform: 'translateY(50%)',
+    variants: [
+      {
+        props: {
+          absolute: true,
+        },
+        style: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          width: '100%',
+        },
       },
-    }),
-  }),
-  ({ theme, ownerState }) => ({
-    ...(ownerState.children &&
-      ownerState.orientation === 'vertical' && {
-        flexDirection: 'column',
-        '&::before, &::after': {
+      {
+        props: {
+          variant: 'inset',
+        },
+        style: {
+          marginLeft: 72,
+        },
+      },
+      {
+        props: {
+          variant: 'middle',
+          orientation: 'horizontal',
+        },
+        style: {
+          marginLeft: theme.spacing(2),
+          marginRight: theme.spacing(2),
+        },
+      },
+      {
+        props: {
+          variant: 'middle',
+          orientation: 'vertical',
+        },
+        style: {
+          marginTop: theme.spacing(1),
+          marginBottom: theme.spacing(1),
+        },
+      },
+      {
+        props: {
+          orientation: 'vertical',
+        },
+        style: {
           height: '100%',
-          top: '0%',
-          left: '50%',
-          borderTop: 0,
-          borderLeft: `thin solid ${theme.palette.divider}`,
-          transform: 'translateX(0%)',
+          borderBottomWidth: 0,
+          borderRightWidth: 'thin',
         },
-      }),
-  }),
-  ({ ownerState }) => ({
-    ...(ownerState.textAlign === 'right' &&
-      ownerState.orientation !== 'vertical' && {
-        '&::before': {
-          width: '90%',
+      },
+      {
+        props: {
+          flexItem: true,
         },
-        '&::after': {
-          width: '10%',
+        style: {
+          alignSelf: 'stretch',
+          height: 'auto',
         },
-      }),
-    ...(ownerState.textAlign === 'left' &&
-      ownerState.orientation !== 'vertical' && {
-        '&::before': {
-          width: '10%',
+      },
+      {
+        props: ({ ownerState }) => !!ownerState.children,
+        style: {
+          display: 'flex',
+          textAlign: 'center',
+          border: 0,
+          borderTopStyle: 'solid',
+          borderLeftStyle: 'solid',
+          '&::before, &::after': {
+            content: '""',
+            alignSelf: 'center',
+          },
         },
-        '&::after': {
-          width: '90%',
+      },
+      {
+        props: ({ ownerState }) => ownerState.children && ownerState.orientation !== 'vertical',
+        style: {
+          '&::before, &::after': {
+            width: '100%',
+            borderTop: `thin solid ${(theme.vars || theme).palette.divider}`,
+            borderTopStyle: 'inherit',
+          },
         },
-      }),
-  }),
+      },
+      {
+        props: ({ ownerState }) => ownerState.orientation === 'vertical' && ownerState.children,
+        style: {
+          flexDirection: 'column',
+          '&::before, &::after': {
+            height: '100%',
+            borderLeft: `thin solid ${(theme.vars || theme).palette.divider}`,
+            borderLeftStyle: 'inherit',
+          },
+        },
+      },
+      {
+        props: ({ ownerState }) =>
+          ownerState.textAlign === 'right' && ownerState.orientation !== 'vertical',
+        style: {
+          '&::before': {
+            width: '90%',
+          },
+          '&::after': {
+            width: '10%',
+          },
+        },
+      },
+      {
+        props: ({ ownerState }) =>
+          ownerState.textAlign === 'left' && ownerState.orientation !== 'vertical',
+        style: {
+          '&::before': {
+            width: '10%',
+          },
+          '&::after': {
+            width: '90%',
+          },
+        },
+      },
+    ],
+  })),
 );
 
 const DividerWrapper = styled('span', {
@@ -153,26 +187,35 @@ const DividerWrapper = styled('span', {
 
     return [styles.wrapper, ownerState.orientation === 'vertical' && styles.wrapperVertical];
   },
-})(({ theme, ownerState }) => ({
-  display: 'inline-block',
-  paddingLeft: theme.spacing(1.2),
-  paddingRight: theme.spacing(1.2),
-  ...(ownerState.orientation === 'vertical' && {
-    paddingTop: theme.spacing(1.2),
-    paddingBottom: theme.spacing(1.2),
-  }),
-}));
+})(
+  memoTheme(({ theme }) => ({
+    display: 'inline-block',
+    paddingLeft: `calc(${theme.spacing(1)} * 1.2)`,
+    paddingRight: `calc(${theme.spacing(1)} * 1.2)`,
+    whiteSpace: 'nowrap',
+    variants: [
+      {
+        props: {
+          orientation: 'vertical',
+        },
+        style: {
+          paddingTop: `calc(${theme.spacing(1)} * 1.2)`,
+          paddingBottom: `calc(${theme.spacing(1)} * 1.2)`,
+        },
+      },
+    ],
+  })),
+);
 
 const Divider = React.forwardRef(function Divider(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiDivider' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiDivider' });
   const {
     absolute = false,
     children,
     className,
-    component = children ? 'div' : 'hr',
-    flexItem = false,
-    light = false,
     orientation = 'horizontal',
+    component = children || orientation === 'vertical' ? 'div' : 'hr',
+    flexItem = false,
     role = component !== 'hr' ? 'separator' : undefined,
     textAlign = 'center',
     variant = 'fullWidth',
@@ -184,7 +227,6 @@ const Divider = React.forwardRef(function Divider(inProps, ref) {
     absolute,
     component,
     flexItem,
-    light,
     orientation,
     role,
     textAlign,
@@ -200,6 +242,11 @@ const Divider = React.forwardRef(function Divider(inProps, ref) {
       role={role}
       ref={ref}
       ownerState={ownerState}
+      aria-orientation={
+        role === 'separator' && (component !== 'hr' || orientation === 'vertical')
+          ? orientation
+          : undefined
+      }
       {...other}
     >
       {children ? (
@@ -212,10 +259,10 @@ const Divider = React.forwardRef(function Divider(inProps, ref) {
 });
 
 Divider.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * Absolutely position the element.
    * @default false
@@ -230,7 +277,7 @@ Divider.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -245,23 +292,19 @@ Divider.propTypes /* remove-proptypes */ = {
    */
   flexItem: PropTypes.bool,
   /**
-   * If `true`, the divider will have a lighter color.
-   * @default false
-   */
-  light: PropTypes.bool,
-  /**
    * The component orientation.
    * @default 'horizontal'
    */
   orientation: PropTypes.oneOf(['horizontal', 'vertical']),
-  /**
-   * @ignore
-   */
-  role: PropTypes /* @typescript-to-proptypes-ignore */.string,
+  role: PropTypes.string,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The text alignment.
    * @default 'center'

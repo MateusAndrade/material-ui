@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Theme, styled } from '@mui/material/styles';
-import { SxProps } from '@mui/system';
+import type { Theme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import type { SxProps } from '@mui/system';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 
@@ -16,7 +17,7 @@ const ProductHeroLayoutRoot = styled('section')(({ theme }) => ({
   },
 }));
 
-const Background = styled(Box)(() => ({
+const Background = styled('div')({
   position: 'absolute',
   left: 0,
   right: 0,
@@ -25,7 +26,7 @@ const Background = styled(Box)(() => ({
   backgroundSize: 'cover',
   backgroundRepeat: 'no-repeat',
   zIndex: -2,
-}));
+});
 
 interface ProductHeroLayoutProps {
   sxBackground: SxProps<Theme>;
@@ -70,10 +71,8 @@ export default function ProductHeroLayout(
         <Box
           component="img"
           src="/static/themes/onepirate/productHeroArrowDown.png"
-          height="16"
-          width="12"
           alt="arrow down"
-          sx={{ position: 'absolute', bottom: 32 }}
+          sx={{ height: '16', width: '12', position: 'absolute', bottom: 32 }}
         />
       </Container>
     </ProductHeroLayoutRoot>

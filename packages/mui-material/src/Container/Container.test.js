@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { describeConformance, createClientRender } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer } from '@mui/internal-test-utils';
 import Container, { containerClasses as classes } from '@mui/material/Container';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Container />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   const defaultProps = {
     children: <div />,
@@ -16,7 +16,6 @@ describe('<Container />', () => {
     render,
     refInstanceof: window.HTMLElement,
     muiName: 'MuiContainer',
-    skip: ['componentsProp'],
     testVariantProps: { fixed: true },
   }));
 
@@ -24,10 +23,10 @@ describe('<Container />', () => {
     it('should support different maxWidth values', () => {
       const { container: firstContainer } = render(<Container {...defaultProps} />);
       expect(firstContainer.firstChild).to.have.class(classes.maxWidthLg);
-      const { container: secondsContainre } = render(
+      const { container: secondsContainer } = render(
         <Container {...defaultProps} maxWidth={false} />,
       );
-      expect(secondsContainre.firstChild).not.to.have.class(classes.maxWidthLg);
+      expect(secondsContainer.firstChild).not.to.have.class(classes.maxWidthLg);
     });
   });
 });

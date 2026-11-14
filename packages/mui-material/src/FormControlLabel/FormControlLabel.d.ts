@@ -1,68 +1,85 @@
 import * as React from 'react';
 import { SxProps } from '@mui/system';
-import { Theme, InternalStandardProps as StandardProps } from '..';
-import { TypographyProps } from '../Typography';
+import { Theme } from '../styles';
+import { InternalStandardProps as StandardProps } from '../internal';
+import Typography from '../Typography';
 import { FormControlLabelClasses } from './formControlLabelClasses';
+import { CreateSlotsAndSlotProps, SlotProps } from '../utils/types';
+
+export interface FormControlLabelTypographySlotPropsOverrides {}
+
+export interface FormControlLabelSlots {
+  /**
+   * The component that renders the label.
+   * This is unused if `disableTypography` is true.
+   * @default Typography
+   */
+  typography: React.ElementType;
+}
+
+export type FormControlLabelSlotsAndSlotProps = CreateSlotsAndSlotProps<
+  FormControlLabelSlots,
+  {
+    typography: SlotProps<
+      typeof Typography,
+      FormControlLabelTypographySlotPropsOverrides,
+      FormControlLabelProps
+    >;
+  }
+>;
 
 export interface FormControlLabelProps
-  extends StandardProps<React.LabelHTMLAttributes<HTMLLabelElement>, 'children' | 'onChange'> {
+  extends
+    StandardProps<React.LabelHTMLAttributes<HTMLLabelElement>, 'children' | 'onChange'>,
+    FormControlLabelSlotsAndSlotProps {
   /**
    * If `true`, the component appears selected.
    */
-  checked?: boolean;
+  checked?: boolean | undefined;
   /**
    * Override or extend the styles applied to the component.
    */
-  classes?: Partial<FormControlLabelClasses>;
-  /**
-   * The props used for each slot inside.
-   * @default {}
-   */
-  componentsProps?: {
-    /**
-     * Props applied to the Typography wrapper of the passed label.
-     * This is unused if disableTpography is true.
-     * @default {}
-     */
-    typography?: TypographyProps;
-  };
+  classes?: Partial<FormControlLabelClasses> | undefined;
   /**
    * A control element. For instance, it can be a `Radio`, a `Switch` or a `Checkbox`.
    */
-  control: React.ReactElement<any, any>;
+  control: React.ReactElement<unknown, any>;
   /**
    * If `true`, the control is disabled.
    */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /**
    * If `true`, the label is rendered as it is passed without an additional typography node.
    */
-  disableTypography?: boolean;
+  disableTypography?: boolean | undefined;
   /**
-   * Pass a ref to the `input` element.
-   */
-  inputRef?: React.Ref<any>;
-  /**
-   * The text to be used in an enclosing label element.
+   * A text or an element to be used in an enclosing label element.
    */
   label: React.ReactNode;
   /**
    * The position of the label.
    * @default 'end'
    */
-  labelPlacement?: 'end' | 'start' | 'top' | 'bottom';
-  name?: string;
+  labelPlacement?: 'end' | 'start' | 'top' | 'bottom' | undefined;
+  /**
+   * The `name` of the control, used when the control does not set its own.
+   */
+  name?: string | undefined;
   /**
    * Callback fired when the state is changed.
    *
    * @param {React.SyntheticEvent} event The event source of the callback.
    * You can pull out the new checked state by accessing `event.target.checked` (boolean).
    */
-  onChange?: (event: React.SyntheticEvent, checked: boolean) => void;
+  onChange?: ((event: React.SyntheticEvent, checked: boolean) => void) | undefined;
+  /**
+   * If `true`, the label will indicate that the `input` is required.
+   */
+  required?: boolean | undefined;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx?: SxProps<Theme>;
+  sx?: SxProps<Theme> | undefined;
   /**
    * The value of the component.
    */
@@ -75,12 +92,12 @@ export interface FormControlLabelProps
  *
  * Demos:
  *
- * - [Checkboxes](https://mui.com/components/checkboxes/)
- * - [Radio Buttons](https://mui.com/components/radio-buttons/)
- * - [Switches](https://mui.com/components/switches/)
+ * - [Checkbox](https://next.mui.com/material-ui/react-checkbox/)
+ * - [Radio Group](https://next.mui.com/material-ui/react-radio-button/)
+ * - [Switch](https://next.mui.com/material-ui/react-switch/)
  *
  * API:
  *
- * - [FormControlLabel API](https://mui.com/api/form-control-label/)
+ * - [FormControlLabel API](https://next.mui.com/material-ui/api/form-control-label/)
  */
-export default function FormControlLabel(props: FormControlLabelProps): JSX.Element;
+export default function FormControlLabel(props: FormControlLabelProps): React.JSX.Element;

@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { expect } from 'chai';
+import { describe, it, expect, beforeEach } from 'vitest';
 import PropTypes from 'prop-types';
 import {
-  createClientRender,
-  describeConformance,
-  strictModeDoubleLoggingSupressed,
-} from 'test/utils';
+  createRenderer,
+  strictModeDoubleLoggingSuppressed,
+  screen,
+  isJsdom,
+} from '@mui/internal-test-utils';
 import Paper, { paperClasses as classes } from '@mui/material/Paper';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Paper />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<Paper />, () => ({
     classes,
@@ -21,46 +22,45 @@ describe('<Paper />', () => {
     testComponentPropWith: 'header',
     testVariantProps: { variant: 'rounded' },
     testStateOverrides: { prop: 'elevation', value: 10, styleKey: 'elevation10' },
-    skip: ['componentsProp'],
   }));
 
   describe('prop: square', () => {
     it('can disable the rounded class', () => {
-      const { getByTestId } = render(
+      render(
         <Paper data-testid="root" square>
           Hello World
         </Paper>,
       );
 
-      expect(getByTestId('root')).not.to.have.class(classes.rounded);
+      expect(screen.getByTestId('root')).not.to.have.class(classes.rounded);
     });
 
     it('adds a rounded class to the root when omitted', () => {
-      const { getByTestId } = render(<Paper data-testid="root">Hello World</Paper>);
+      render(<Paper data-testid="root">Hello World</Paper>);
 
-      expect(getByTestId('root')).to.have.class(classes.rounded);
+      expect(screen.getByTestId('root')).to.have.class(classes.rounded);
     });
   });
 
   describe('prop: variant', () => {
     it('adds a outlined class', () => {
-      const { getByTestId } = render(
+      render(
         <Paper data-testid="root" variant="outlined">
           Hello World
         </Paper>,
       );
 
-      expect(getByTestId('root')).to.have.class(classes.outlined);
+      expect(screen.getByTestId('root')).to.have.class(classes.outlined);
     });
   });
 
   it('should set the elevation elevation class', () => {
-    const { getByTestId, setProps } = render(
+    const { setProps } = render(
       <Paper data-testid="root" elevation={16}>
         Hello World
       </Paper>,
     );
-    const root = getByTestId('root');
+    const root = screen.getByTestId('root');
 
     expect(root).to.have.class(classes.elevation16);
 
@@ -76,13 +76,14 @@ describe('<Paper />', () => {
   it('allows custom elevations via theme.shadows', () => {
     const theme = createTheme();
     theme.shadows.push('20px 20px');
-    const { getByTestId } = render(
+
+    render(
       <ThemeProvider theme={theme}>
         <Paper data-testid="root" classes={{ elevation25: 'custom-elevation' }} elevation={25} />
       </ThemeProvider>,
     );
 
-    expect(getByTestId('root')).to.have.class('custom-elevation');
+    expect(screen.getByTestId('root')).to.have.class('custom-elevation');
   });
 
   describe('warnings', () => {
@@ -95,7 +96,7 @@ describe('<Paper />', () => {
         render(<Paper elevation={25} />);
       }).toErrorDev([
         'MUI: The elevation provided <Paper elevation={25}> is not available in the theme.',
-        !strictModeDoubleLoggingSupressed &&
+        !strictModeDoubleLoggingSuppressed &&
           'MUI: The elevation provided <Paper elevation={25}> is not available in the theme.',
       ]);
     });
@@ -112,5 +113,47 @@ describe('<Paper />', () => {
         'MUI: Combining `elevation={5}` with `variant="outlined"` has no effect. Either use `elevation={0}` or use a different `variant`.',
       ]);
     });
+  });
+
+  it.skipIf(isJsdom())(
+    'should have no boxShadow or background-image on Paper with elevation 0 in dark mode using CSS variables',
+    function test() {
+      const theme = createTheme({
+        cssVariables: true,
+        colorSchemes: {
+          dark: true,
+        },
+        defaultColorScheme: 'dark',
+      });
+
+      render(
+        <ThemeProvider theme={theme}>
+          <Paper data-testid="parent" elevation={23}>
+            elevation=23
+            <Paper data-testid="child" elevation={0} />
+          </Paper>
+        </ThemeProvider>,
+      );
+
+      const childPaper = screen.getByTestId('child');
+      expect(childPaper).toHaveComputedStyle({
+        boxShadow: 'none',
+        backgroundImage: 'none',
+      });
+    },
+  );
+
+  it.skipIf(isJsdom())('should use the shape.borderRadius CSS variable', () => {
+    const theme = createTheme({ cssVariables: true });
+
+    render(
+      <ThemeProvider theme={theme}>
+        <div style={{ '--mui-shape-borderRadius': '10px' }}>
+          <Paper data-testid="paper" />
+        </div>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('paper')).toHaveComputedStyle({ borderTopLeftRadius: '10px' });
   });
 });

@@ -1,0 +1,19 @@
+name: No response
+
+on:
+  workflow_dispatch:
+  schedule:
+    # These runs in our repos are spread evenly throughout the day to avoid hitting rate limits.
+    # If you change this schedule, consider changing the remaining repositories as well.
+    # Runs at 12 am, 12 pm
+    - cron: '0 0,12 * * *'
+
+permissions: {}
+
+jobs:
+  noResponse:
+    permissions:
+      issues: write
+      pull-requests: write
+    name: Handle stale issues and PRs
+    uses: mui/mui-public/.github/workflows/general_handle-stale-issues-and-prs.yml@d273bbedf2bc589425d71701964d01a9d67c9460 # master

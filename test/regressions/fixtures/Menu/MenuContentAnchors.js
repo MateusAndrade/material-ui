@@ -6,11 +6,11 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 
-const MenuItemStyled = styled(MenuItem)(() => ({
+const MenuItemStyled = styled(MenuItem)({
   '&.Mui-focusVisible': { border: '3px dashed black' },
   '&.Mui-selected': { border: '3px dotted black' },
   '&.Mui-focusVisible.Mui-selected': { border: '3px solid black' },
-}));
+});
 
 /**
  * Item 1 or 2 can be pre-selected to check alignment between anchorEl and menuitem
@@ -19,7 +19,7 @@ function SimpleMenu({ selectedItem, ...props }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   return (
-    <Grid item>
+    <Grid>
       <Button
         style={{
           // give the anchor enough space so that the menu can align the selected item

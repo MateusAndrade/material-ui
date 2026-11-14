@@ -1,11 +1,12 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import capitalize from '../utils/capitalize';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
-import StepperContext from '../Stepper/StepperContext';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
+import { useStepperContext } from '../Stepper/StepperContext';
 import StepContext from '../Step/StepContext';
 import { getStepConnectorUtilityClass } from './stepConnectorClasses';
 
@@ -21,7 +22,7 @@ const useUtilityClasses = (ownerState) => {
       completed && 'completed',
       disabled && 'disabled',
     ],
-    line: ['line', `line${capitalize(orientation)}`],
+    line: ['line'],
   };
 
   return composeClasses(slots, getStepConnectorUtilityClass, classes);
@@ -40,46 +41,70 @@ const StepConnectorRoot = styled('div', {
       ownerState.completed && styles.completed,
     ];
   },
-})(({ ownerState }) => ({
+})({
   flex: '1 1 auto',
-  ...(ownerState.orientation === 'vertical' && {
-    marginLeft: 12, // half icon
-  }),
-  ...(ownerState.alternativeLabel && {
-    position: 'absolute',
-    top: 8 + 4,
-    left: 'calc(-50% + 20px)',
-    right: 'calc(50% + 20px)',
-  }),
-}));
+  variants: [
+    {
+      props: { orientation: 'vertical' },
+      style: {
+        marginLeft: 12, // half icon
+      },
+    },
+    {
+      props: { orientation: 'vertical', alternativeLabel: true },
+      style: {
+        marginLeft: 'auto',
+        marginRight: 12, // half icon
+      },
+    },
+    {
+      props: { orientation: 'horizontal', alternativeLabel: true },
+      style: {
+        position: 'absolute',
+        top: 8 + 4,
+        left: 'calc(-50% + 20px)',
+        right: 'calc(50% + 20px)',
+      },
+    },
+  ],
+});
 
 const StepConnectorLine = styled('span', {
   name: 'MuiStepConnector',
   slot: 'Line',
-  overridesResolver: (props, styles) => {
-    const { ownerState } = props;
-
-    return [styles.line, styles[`line${capitalize(ownerState.orientation)}`]];
-  },
-})(({ ownerState, theme }) => ({
-  display: 'block',
-  borderColor: theme.palette.mode === 'light' ? theme.palette.grey[400] : theme.palette.grey[600],
-  ...(ownerState.orientation === 'horizontal' && {
-    borderTopStyle: 'solid',
-    borderTopWidth: 1,
+})(
+  memoTheme(({ theme }) => {
+    const borderColor =
+      theme.palette.mode === 'light' ? theme.palette.grey[400] : theme.palette.grey[600];
+    return {
+      display: 'block',
+      borderColor: theme.vars ? theme.vars.palette.StepConnector.border : borderColor,
+      variants: [
+        {
+          props: { orientation: 'horizontal' },
+          style: {
+            borderTopStyle: 'solid',
+            borderTopWidth: 1,
+          },
+        },
+        {
+          props: { orientation: 'vertical' },
+          style: {
+            borderLeftStyle: 'solid',
+            borderLeftWidth: 1,
+            minHeight: 24,
+          },
+        },
+      ],
+    };
   }),
-  ...(ownerState.orientation === 'vertical' && {
-    borderLeftStyle: 'solid',
-    borderLeftWidth: 1,
-    minHeight: 24,
-  }),
-}));
+);
 
 const StepConnector = React.forwardRef(function StepConnector(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiStepConnector' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiStepConnector' });
   const { className, ...other } = props;
 
-  const { alternativeLabel, orientation = 'horizontal' } = React.useContext(StepperContext);
+  const { alternativeLabel, orientation = 'horizontal' } = useStepperContext();
   const { active, disabled, completed } = React.useContext(StepContext);
 
   const ownerState = { ...props, alternativeLabel, orientation, active, completed, disabled };
@@ -98,22 +123,23 @@ const StepConnector = React.forwardRef(function StepConnector(inProps, ref) {
 });
 
 StepConnector.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
-  /**
-   * @ignore
-   */
   className: PropTypes.string,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default StepConnector;

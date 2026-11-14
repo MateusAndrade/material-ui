@@ -1,13 +1,16 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import CheckCircle from '../internal/svg-icons/CheckCircle';
 import Warning from '../internal/svg-icons/Warning';
 import SvgIcon from '../SvgIcon';
 import stepIconClasses, { getStepIconUtilityClass } from './stepIconClasses';
+import { getTransitionStyles } from '../transitions/utils';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, active, completed, error } = ownerState;
@@ -23,36 +26,35 @@ const useUtilityClasses = (ownerState) => {
 const StepIconRoot = styled(SvgIcon, {
   name: 'MuiStepIcon',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
-})(({ theme }) => ({
-  display: 'block',
-  transition: theme.transitions.create('color', {
-    duration: theme.transitions.duration.shortest,
-  }),
-  color: theme.palette.text.disabled,
-  [`&.${stepIconClasses.completed}`]: {
-    color: theme.palette.primary.main,
-  },
-  [`&.${stepIconClasses.active}`]: {
-    color: theme.palette.primary.main,
-  },
-  [`&.${stepIconClasses.error}`]: {
-    color: theme.palette.error.main,
-  },
-}));
+})(
+  memoTheme(({ theme }) => ({
+    display: 'block',
+    ...getTransitionStyles(theme, 'color', {
+      duration: theme.transitions.duration.shortest,
+    }),
+    color: (theme.vars || theme).palette.text.disabled,
+    [`&.${stepIconClasses.completed}, &.${stepIconClasses.active}`]: {
+      color: (theme.vars || theme).palette.primary.main,
+    },
+    [`&.${stepIconClasses.error}`]: {
+      color: (theme.vars || theme).palette.error.main,
+    },
+  })),
+);
 
 const StepIconText = styled('text', {
   name: 'MuiStepIcon',
   slot: 'Text',
-  overridesResolver: (props, styles) => styles.text,
-})(({ theme }) => ({
-  fill: theme.palette.primary.contrastText,
-  fontSize: theme.typography.caption.fontSize,
-  fontFamily: theme.typography.fontFamily,
-}));
+})(
+  memoTheme(({ theme }) => ({
+    fill: (theme.vars || theme).palette.primary.contrastText,
+    fontSize: theme.typography.caption.fontSize,
+    fontFamily: theme.typography.fontFamily,
+  })),
+);
 
 const StepIcon = React.forwardRef(function StepIcon(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiStepIcon' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiStepIcon' });
   const {
     active = false,
     className: classNameProp,
@@ -98,8 +100,9 @@ const StepIcon = React.forwardRef(function StepIcon(inProps, ref) {
         <StepIconText
           className={classes.text}
           x="12"
-          y="16"
+          y="12"
           textAnchor="middle"
+          dominantBaseline="central"
           ownerState={ownerState}
         >
           {icon}
@@ -112,10 +115,10 @@ const StepIcon = React.forwardRef(function StepIcon(inProps, ref) {
 });
 
 StepIcon.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * Whether this step is active.
    * @default false
@@ -125,9 +128,6 @@ StepIcon.propTypes /* remove-proptypes */ = {
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
-  /**
-   * @ignore
-   */
   className: PropTypes.string,
   /**
    * Mark the step as completed. Is passed to child components.
@@ -146,7 +146,11 @@ StepIcon.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default StepIcon;

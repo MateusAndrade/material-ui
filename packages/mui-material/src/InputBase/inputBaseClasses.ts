@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface InputBaseClasses {
   /** Styles applied to the root element. */
@@ -25,20 +26,12 @@ export interface InputBaseClasses {
   fullWidth: string;
   /** Styles applied to the root element if `hiddenLabel={true}`. */
   hiddenLabel: string;
+  /** State class applied to the root element if `readOnly={true}`. */
+  readOnly: string;
   /** Styles applied to the input element. */
   input: string;
-  /** Styles applied to the input element if `size="small"`. */
-  inputSizeSmall: string;
-  /** Styles applied to the input element if `multiline={true}`. */
-  inputMultiline: string;
   /** Styles applied to the input element if `type="search"`. */
   inputTypeSearch: string;
-  /** Styles applied to the input element if `startAdornment` is provided. */
-  inputAdornedStart: string;
-  /** Styles applied to the input element if `endAdornment` is provided. */
-  inputAdornedEnd: string;
-  /** Styles applied to the input element if `hiddenLabel={true}`. */
-  inputHiddenLabel: string;
 }
 
 export type InputBaseClassKey = keyof InputBaseClasses;
@@ -60,13 +53,9 @@ const inputBaseClasses: InputBaseClasses = generateUtilityClasses('MuiInputBase'
   'colorSecondary',
   'fullWidth',
   'hiddenLabel',
+  'readOnly',
   'input',
-  'inputSizeSmall',
-  'inputMultiline',
   'inputTypeSearch',
-  'inputAdornedStart',
-  'inputAdornedEnd',
-  'inputHiddenLabel',
 ]);
 
 export default inputBaseClasses;

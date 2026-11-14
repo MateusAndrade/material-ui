@@ -1,25 +1,27 @@
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+'use client';
+import composeClasses from '@mui/utils/composeClasses';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import * as React from 'react';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import capitalize from '../utils/capitalize';
 import { getImageListItemBarUtilityClass } from './imageListItemBarClasses';
 
 const useUtilityClasses = (ownerState) => {
-  const { classes, position, actionIcon, actionPosition } = ownerState;
+  const { classes, position, actionPosition } = ownerState;
 
   const slots = {
-    root: ['root', `position${capitalize(position)}`],
-    titleWrap: [
-      'titleWrap',
-      `titleWrap${capitalize(position)}`,
-      actionIcon && `titleWrapActionPos${capitalize(actionPosition)}`,
+    root: [
+      'root',
+      `position${capitalize(position)}`,
+      `actionPosition${capitalize(actionPosition)}`,
     ],
+    titleWrap: ['titleWrap'],
     title: ['title'],
     subtitle: ['subtitle'],
-    actionIcon: ['actionIcon', `actionIconActionPos${capitalize(actionPosition)}`],
+    actionIcon: ['actionIcon'],
   };
 
   return composeClasses(slots, getImageListItemBarUtilityClass, classes);
@@ -33,111 +35,133 @@ const ImageListItemBarRoot = styled('div', {
 
     return [styles.root, styles[`position${capitalize(ownerState.position)}`]];
   },
-})(({ theme, ownerState }) => {
-  return {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    fontFamily: theme.typography.fontFamily,
-    ...(ownerState.position === 'bottom' && {
-      bottom: 0,
-    }),
-    ...(ownerState.position === 'top' && {
-      top: 0,
-    }),
-    ...(ownerState.position === 'below' && {
-      position: 'relative',
-      background: 'transparent',
-      alignItems: 'normal',
-    }),
-  };
-});
+})(
+  memoTheme(({ theme }) => {
+    return {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      fontFamily: theme.typography.fontFamily,
+      variants: [
+        {
+          props: {
+            position: 'bottom',
+          },
+          style: {
+            bottom: 0,
+          },
+        },
+        {
+          props: {
+            position: 'top',
+          },
+          style: {
+            top: 0,
+          },
+        },
+        {
+          props: {
+            position: 'below',
+          },
+          style: {
+            position: 'relative',
+            background: 'transparent',
+            alignItems: 'normal',
+          },
+        },
+      ],
+    };
+  }),
+);
 
 const ImageListItemBarTitleWrap = styled('div', {
   name: 'MuiImageListItemBar',
   slot: 'TitleWrap',
-  overridesResolver: (props, styles) => {
-    const { ownerState } = props;
-
-    return [
-      styles.titleWrap,
-      styles[`titleWrap${capitalize(ownerState.position)}`],
-      ownerState.actionIcon && styles[`titleWrapActionPos${capitalize(ownerState.actionPosition)}`],
-    ];
-  },
-})(({ theme, ownerState }) => {
-  return {
-    flexGrow: 1,
-    padding: '12px 16px',
-    color: theme.palette.common.white,
-    overflow: 'hidden',
-    ...(ownerState.position === 'below' && {
-      padding: '6px 0 12px',
-      color: 'inherit',
-    }),
-    ...(ownerState.actionIcon &&
-      ownerState.actionPosition === 'left' && {
-        paddingLeft: 0,
-      }),
-    ...(ownerState.actionIcon &&
-      ownerState.actionPosition === 'right' && {
-        paddingRight: 0,
-      }),
-  };
-});
+})(
+  memoTheme(({ theme }) => {
+    return {
+      flexGrow: 1,
+      padding: '12px 16px',
+      color: (theme.vars || theme).palette.common.white,
+      overflow: 'hidden',
+      variants: [
+        {
+          props: {
+            position: 'below',
+          },
+          style: {
+            padding: '6px 0 12px',
+            color: 'inherit',
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.actionIcon && ownerState.actionPosition === 'left',
+          style: {
+            paddingLeft: 0,
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.actionIcon && ownerState.actionPosition === 'right',
+          style: {
+            paddingRight: 0,
+          },
+        },
+      ],
+    };
+  }),
+);
 
 const ImageListItemBarTitle = styled('div', {
   name: 'MuiImageListItemBar',
   slot: 'Title',
-  overridesResolver: (props, styles) => styles.title,
-})(({ theme }) => {
-  return {
-    fontSize: theme.typography.pxToRem(16),
-    lineHeight: '24px',
-    textOverflow: 'ellipsis',
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-  };
-});
+})(
+  memoTheme(({ theme }) => {
+    return {
+      fontSize: theme.typography.pxToRem(16),
+      lineHeight: '24px',
+      textOverflow: 'ellipsis',
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+    };
+  }),
+);
 
 const ImageListItemBarSubtitle = styled('div', {
   name: 'MuiImageListItemBar',
   slot: 'Subtitle',
-  overridesResolver: (props, styles) => styles.subtitle,
-})(({ theme }) => {
-  return {
-    fontSize: theme.typography.pxToRem(12),
-    lineHeight: 1,
-    textOverflow: 'ellipsis',
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-  };
-});
+})(
+  memoTheme(({ theme }) => {
+    return {
+      fontSize: theme.typography.pxToRem(12),
+      lineHeight: 1,
+      textOverflow: 'ellipsis',
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+    };
+  }),
+);
 
 const ImageListItemBarActionIcon = styled('div', {
   name: 'MuiImageListItemBar',
   slot: 'ActionIcon',
-  overridesResolver: (props, styles) => {
-    const { ownerState } = props;
-
-    return [
-      styles.actionIcon,
-      styles[`actionIconActionPos${capitalize(ownerState.actionPosition)}`],
-    ];
-  },
-})(({ ownerState }) => {
-  return {
-    ...(ownerState.actionPosition === 'left' && {
-      order: -1,
-    }),
-  };
+})({
+  variants: [
+    {
+      props: {
+        actionPosition: 'left',
+      },
+      style: {
+        order: -1,
+      },
+    },
+  ],
 });
 
 const ImageListItemBar = React.forwardRef(function ImageListItemBar(inProps, ref) {
-  const props = useThemeProps({
+  const props = useDefaultProps({
     props: inProps,
     name: 'MuiImageListItemBar',
   });
@@ -181,10 +205,10 @@ const ImageListItemBar = React.forwardRef(function ImageListItemBar(inProps, ref
 });
 
 ImageListItemBar.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * An IconButton element to be used as secondary action target
    * (primary action target is the item itself).
@@ -195,17 +219,11 @@ ImageListItemBar.propTypes /* remove-proptypes */ = {
    * @default 'right'
    */
   actionPosition: PropTypes.oneOf(['left', 'right']),
-  /**
-   * @ignore
-   */
   children: PropTypes.node,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
-  /**
-   * @ignore
-   */
   className: PropTypes.string,
   /**
    * Position of the title bar.
@@ -219,7 +237,11 @@ ImageListItemBar.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * Title to be displayed.
    */

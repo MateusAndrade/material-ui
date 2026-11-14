@@ -1,10 +1,12 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import composeClasses from '@mui/utils/composeClasses';
 import TableContext from './TableContext';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { getTableUtilityClass } from './tableClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -25,27 +27,34 @@ const TableRoot = styled('table', {
 
     return [styles.root, ownerState.stickyHeader && styles.stickyHeader];
   },
-})(({ theme, ownerState }) => ({
-  display: 'table',
-  width: '100%',
-  borderCollapse: 'collapse',
-  borderSpacing: 0,
-  '& caption': {
-    ...theme.typography.body2,
-    padding: theme.spacing(2),
-    color: theme.palette.text.secondary,
-    textAlign: 'left',
-    captionSide: 'bottom',
-  },
-  ...(ownerState.stickyHeader && {
-    borderCollapse: 'separate',
-  }),
-}));
+})(
+  memoTheme(({ theme }) => ({
+    display: 'table',
+    width: '100%',
+    borderCollapse: 'collapse',
+    borderSpacing: 0,
+    '& caption': {
+      ...theme.typography.body2,
+      padding: theme.spacing(2),
+      color: (theme.vars || theme).palette.text.secondary,
+      textAlign: 'left',
+      captionSide: 'bottom',
+    },
+    variants: [
+      {
+        props: ({ ownerState }) => ownerState.stickyHeader,
+        style: {
+          borderCollapse: 'separate',
+        },
+      },
+    ],
+  })),
+);
 
 const defaultComponent = 'table';
 
 const Table = React.forwardRef(function Table(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiTable' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiTable' });
   const {
     className,
     component = defaultComponent,
@@ -85,10 +94,10 @@ const Table = React.forwardRef(function Table(inProps, ref) {
 });
 
 Table.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the table, normally `TableHead` and `TableBody`.
    */
@@ -98,7 +107,7 @@ Table.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -121,15 +130,17 @@ Table.propTypes /* remove-proptypes */ = {
   ]),
   /**
    * Set the header sticky.
-   *
-   * ⚠️ It doesn't work with IE11.
    * @default false
    */
   stickyHeader: PropTypes.bool,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default Table;

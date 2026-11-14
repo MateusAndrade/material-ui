@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { describeConformance, createClientRender } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen, isJsdom } from '@mui/internal-test-utils';
+import { styled } from '@mui/material/styles';
 import Divider, { dividerClasses as classes } from '@mui/material/Divider';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Divider />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<Divider />, () => ({
     classes,
@@ -14,17 +15,11 @@ describe('<Divider />', () => {
     refInstanceof: window.HTMLHRElement,
     testComponentPropWith: 'div',
     testVariantProps: { orientation: 'vertical', flexItem: true, textAlign: 'left' },
-    skip: ['componentsProp'],
   }));
 
   it('should set the absolute class', () => {
     const { container } = render(<Divider absolute />);
     expect(container.firstChild).to.have.class(classes.absolute);
-  });
-
-  it('should set the light class', () => {
-    const { container } = render(<Divider light />);
-    expect(container.firstChild).to.have.class(classes.light);
   });
 
   it('should set the flexItem class', () => {
@@ -48,7 +43,8 @@ describe('<Divider />', () => {
     describe('prop: orientation', () => {
       it('should set the textVertical class', () => {
         const { container } = render(<Divider orientation="vertical">content</Divider>);
-        expect(container.querySelectorAll(`.${classes.withChildrenVertical}`).length).to.equal(1);
+        expect(container.querySelectorAll(`.${classes.withChildren}`).length).to.equal(1);
+        expect(container.querySelectorAll(`.${classes.vertical}`).length).to.equal(1);
         expect(container.querySelectorAll(`.${classes.wrapperVertical}`).length).to.equal(1);
       });
     });
@@ -82,6 +78,34 @@ describe('<Divider />', () => {
         expect(container.querySelectorAll(`.${classes.textAlignLeft}`).length).to.equal(0);
       });
     });
+
+    describe.skipIf(isJsdom())('custom border style', function test() {
+      const StyledDivider = styled(Divider)(() => ({
+        borderStyle: 'dashed',
+      }));
+
+      it('should set the dashed border-left-style in before and after pseudo-elements when orientation is vertical', () => {
+        const { container } = render(<StyledDivider orientation="vertical">content</StyledDivider>);
+        expect(
+          getComputedStyle(container.firstChild, '::before').getPropertyValue('border-left-style'),
+        ).to.equal('dashed');
+        expect(
+          getComputedStyle(container.firstChild, '::after').getPropertyValue('border-left-style'),
+        ).to.equal('dashed');
+      });
+
+      it('should set the dashed border-top-style in before and after pseudo-elements when orientation is horizontal', () => {
+        const { container } = render(
+          <StyledDivider orientation="horizontal">content</StyledDivider>,
+        );
+        expect(
+          getComputedStyle(container.firstChild, '::before').getPropertyValue('border-top-style'),
+        ).to.equal('dashed');
+        expect(
+          getComputedStyle(container.firstChild, '::after').getPropertyValue('border-top-style'),
+        ).to.equal('dashed');
+      });
+    });
   });
 
   describe('prop: variant', () => {
@@ -91,14 +115,14 @@ describe('<Divider />', () => {
       expect(container.firstChild).not.to.have.class(classes.middle);
     });
 
-    describe('prop: variant="fullWidth" ', () => {
+    describe('prop: variant="fullWidth"', () => {
       it('should render with the root and default class', () => {
         const { container } = render(<Divider />);
         expect(container.firstChild).to.have.class(classes.root);
       });
     });
 
-    describe('prop: variant="inset" ', () => {
+    describe('prop: variant="inset"', () => {
       it('should set the inset class', () => {
         const { container } = render(<Divider variant="inset" />);
         expect(container.firstChild).to.have.class(classes.inset);
@@ -129,19 +153,29 @@ describe('<Divider />', () => {
 
   describe('role', () => {
     it('avoids adding implicit aria semantics', () => {
-      const { container } = render(<Divider />);
-      expect(container.firstChild).not.to.have.attribute('role');
+      render(<Divider />);
+      expect(screen.getByRole('separator')).not.to.have.attribute('role');
+      expect(screen.getByRole('separator')).not.to.have.attribute('aria-orientation');
     });
 
     it('adds a proper role if none is specified', () => {
-      const { container } = render(<Divider component="div" />);
-      expect(container.firstChild).to.have.attribute('role', 'separator');
+      render(<Divider component="div" />);
+      expect(screen.getByRole('separator')).not.to.equal(null);
+      expect(screen.getByRole('separator')).to.have.attribute('aria-orientation');
+    });
+
+    it('adds a proper role with vertical orientation', () => {
+      render(<Divider orientation="vertical" />);
+      expect(screen.getByRole('separator')).not.to.equal(null);
+      expect(screen.getByRole('separator')).to.have.attribute('aria-orientation');
     });
 
     it('overrides the computed role with the provided one', () => {
-      // presentation is the only valid aria role
-      const { container } = render(<Divider role="presentation" />);
-      expect(container.firstChild).to.have.attribute('role', 'presentation');
+      // none is the only valid aria role
+      render(<Divider role="none" data-testid="divider" />);
+      expect(screen.queryByRole('separator')).to.equal(null);
+      expect(screen.getByTestId('divider')).to.have.attribute('role', 'none');
+      expect(screen.getByTestId('divider')).not.to.have.attribute('aria-orientation');
     });
   });
 });

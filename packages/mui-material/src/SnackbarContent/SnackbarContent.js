@@ -1,10 +1,13 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { emphasize } from '@mui/system';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { emphasize } from '@mui/system/colorManipulator';
+import { styled } from '../zero-styled';
+import { applyChildrenFocusVisible } from '../styles/focusVisible';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import Paper from '../Paper';
 import { getSnackbarContentUtilityClass } from './snackbarContentClasses';
 
@@ -23,32 +26,36 @@ const useUtilityClasses = (ownerState) => {
 const SnackbarContentRoot = styled(Paper, {
   name: 'MuiSnackbarContent',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
-})(({ theme }) => {
-  const emphasis = theme.palette.mode === 'light' ? 0.8 : 0.98;
-  const backgroundColor = emphasize(theme.palette.background.default, emphasis);
+})(
+  memoTheme(({ theme }) => {
+    const emphasis = theme.palette.mode === 'light' ? 0.8 : 0.98;
 
-  return {
-    ...theme.typography.body2,
-    color: theme.palette.getContrastText(backgroundColor),
-    backgroundColor,
-    display: 'flex',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    padding: '6px 16px',
-    borderRadius: theme.shape.borderRadius,
-    flexGrow: 1,
-    [theme.breakpoints.up('sm')]: {
-      flexGrow: 'initial',
-      minWidth: 288,
-    },
-  };
-});
+    return {
+      ...(theme.focusVisible &&
+        applyChildrenFocusVisible(`0 0 0 4px ${(theme.vars || theme).palette.background.default}`)),
+      ...theme.typography.body2,
+      color: theme.vars
+        ? theme.vars.palette.SnackbarContent.color
+        : theme.palette.getContrastText(emphasize(theme.palette.background.default, emphasis)),
+      backgroundColor: theme.vars
+        ? theme.vars.palette.SnackbarContent.bg
+        : emphasize(theme.palette.background.default, emphasis),
+      display: 'flex',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      padding: '6px 16px',
+      flexGrow: 1,
+      [theme.breakpoints.up('sm')]: {
+        flexGrow: 'initial',
+        minWidth: 288,
+      },
+    };
+  }),
+);
 
 const SnackbarContentMessage = styled('div', {
   name: 'MuiSnackbarContent',
   slot: 'Message',
-  overridesResolver: (props, styles) => styles.message,
 })({
   padding: '8px 0',
 });
@@ -56,7 +63,6 @@ const SnackbarContentMessage = styled('div', {
 const SnackbarContentAction = styled('div', {
   name: 'MuiSnackbarContent',
   slot: 'Action',
-  overridesResolver: (props, styles) => styles.action,
 })({
   display: 'flex',
   alignItems: 'center',
@@ -66,7 +72,7 @@ const SnackbarContentAction = styled('div', {
 });
 
 const SnackbarContent = React.forwardRef(function SnackbarContent(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiSnackbarContent' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiSnackbarContent' });
   const { action, className, message, role = 'alert', ...other } = props;
   const ownerState = props;
   const classes = useUtilityClasses(ownerState);
@@ -74,7 +80,6 @@ const SnackbarContent = React.forwardRef(function SnackbarContent(inProps, ref) 
   return (
     <SnackbarContentRoot
       role={role}
-      square
       elevation={6}
       className={clsx(classes.root, className)}
       ownerState={ownerState}
@@ -94,10 +99,10 @@ const SnackbarContent = React.forwardRef(function SnackbarContent(inProps, ref) 
 });
 
 SnackbarContent.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The action to display. It renders after the message, at the end of the snackbar.
    */
@@ -107,7 +112,7 @@ SnackbarContent.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -118,11 +123,15 @@ SnackbarContent.propTypes /* remove-proptypes */ = {
    * The ARIA role attribute of the element.
    * @default 'alert'
    */
-  role: PropTypes /* @typescript-to-proptypes-ignore */.string,
+  role: PropTypes.string,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default SnackbarContent;

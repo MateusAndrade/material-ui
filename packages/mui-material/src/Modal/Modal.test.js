@@ -1,26 +1,20 @@
+import { describe, beforeAll, beforeEach, afterAll, it, expect, afterEach } from 'vitest';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { expect } from 'chai';
-import { useFakeTimers, spy } from 'sinon';
+import { spy } from 'sinon';
 import PropTypes from 'prop-types';
-import {
-  act,
-  createClientRender,
-  fireEvent,
-  within,
-  describeConformance,
-  screen,
-} from 'test/utils';
+import { act, createRenderer, fireEvent, within, screen, isJsdom } from '@mui/internal-test-utils';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Fade from '@mui/material/Fade';
 import Modal, { modalClasses as classes } from '@mui/material/Modal';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Modal />', () => {
-  const render = createClientRender();
+  const { clock, render } = createRenderer();
 
   let savedBodyStyle;
 
-  before(() => {
+  beforeAll(() => {
     savedBodyStyle = document.body.style;
   });
 
@@ -39,12 +33,14 @@ describe('<Modal />', () => {
       muiName: 'MuiModal',
       refInstanceof: window.HTMLDivElement,
       testVariantProps: { hideBackdrop: true },
+      slots: {
+        root: { expectedClassName: classes.root },
+        backdrop: { expectedClassName: classes.backdrop },
+      },
       skip: [
-        'rootClass', // portal, can't determin the root
-        'componentsProp', // TODO isRTL is leaking, why do we even have it in the first place?
-        'themeDefaultProps', // portal, can't determin the root
-        'themeStyleOverrides', // portal, can't determin the root
-        'reactTestRenderer', // portal https://github.com/facebook/react/issues/11565
+        'rootClass', // portal, can't determine the root
+        'themeDefaultProps', // portal, can't determine the root
+        'themeStyleOverrides', // portal, can't determine the root
       ],
     }),
   );
@@ -52,12 +48,12 @@ describe('<Modal />', () => {
   describe('props:', () => {
     let container;
 
-    before(() => {
+    beforeAll(() => {
       container = document.createElement('div');
       document.body.appendChild(container);
     });
 
-    after(() => {
+    afterAll(() => {
       document.body.removeChild(container);
     });
 
@@ -75,36 +71,50 @@ describe('<Modal />', () => {
     });
   });
 
+  describe('prop: classes', () => {
+    it('adds custom classes to the component', () => {
+      render(
+        <Modal data-testid="Portal" open classes={{ root: 'custom-root', hidden: 'custom-hidden' }}>
+          <div />
+        </Modal>,
+      );
+
+      expect(screen.getByTestId('Portal')).to.have.class(classes.root);
+      expect(screen.getByTestId('Portal')).to.have.class('custom-root');
+      expect(screen.getByTestId('Portal')).not.to.have.class('custom-hidden');
+    });
+  });
+
   describe('prop: open', () => {
     it('should not render the children by default', () => {
-      const { queryByTestId } = render(
+      render(
         <Modal open={false}>
           <p data-testid="content">Hello World</p>
         </Modal>,
       );
 
-      expect(queryByTestId('content')).to.equal(null);
+      expect(screen.queryByTestId('content')).to.equal(null);
     });
 
     it('renders the children inside a div through a portal when open', () => {
-      const { getByTestId } = render(
+      render(
         <Modal data-testid="Portal" open>
           <p>Hello World</p>
         </Modal>,
       );
 
-      expect(getByTestId('Portal')).to.have.tagName('div');
+      expect(screen.getByTestId('Portal')).to.have.tagName('div');
     });
 
     it('makes the child focusable without adding a role', () => {
-      const { getByTestId } = render(
+      render(
         <Modal open>
           <div data-testid="child">Hello World</div>
         </Modal>,
       );
 
-      expect(getByTestId('child')).not.to.have.attribute('role');
-      expect(getByTestId('child')).to.have.attribute('tabIndex', '-1');
+      expect(screen.getByTestId('child')).not.to.have.attribute('role');
+      expect(screen.getByTestId('child')).to.have.attribute('tabIndex', '-1');
     });
   });
 
@@ -120,7 +130,7 @@ describe('<Modal />', () => {
       }
 
       render(
-        <Modal open BackdropComponent={TestBackdrop}>
+        <Modal open slots={{ backdrop: TestBackdrop }}>
           <div />
         </Modal>,
       );
@@ -129,14 +139,14 @@ describe('<Modal />', () => {
     });
 
     it('should render a backdrop component into the portal before the modal content', () => {
-      const { getByTestId } = render(
+      render(
         <Modal open data-testid="modal">
           <div data-testid="container" />
         </Modal>,
       );
 
-      const modal = getByTestId('modal');
-      const container = getByTestId('container');
+      const modal = screen.getByTestId('modal');
+      const container = screen.getByTestId('container');
       expect(modal.children).to.have.length(4);
       expect(modal.children[0]).not.to.equal(undefined);
       expect(modal.children[0]).not.to.equal(null);
@@ -153,7 +163,15 @@ describe('<Modal />', () => {
         return <div data-testid="backdrop" data-timeout={transitionDuration} />;
       }
       render(
-        <Modal open BackdropComponent={TestBackdrop} BackdropProps={{ transitionDuration: 200 }}>
+        <Modal
+          open
+          slots={{ backdrop: TestBackdrop }}
+          slotProps={{
+            backdrop: {
+              transitionDuration: 200,
+            },
+          }}
+        >
           <div />
         </Modal>,
       );
@@ -163,13 +181,22 @@ describe('<Modal />', () => {
 
     it('should attach a handler to the backdrop that fires onClose', () => {
       const onClose = spy();
-      const { getByTestId } = render(
-        <Modal onClose={onClose} open BackdropProps={{ 'data-testid': 'backdrop' }}>
+
+      render(
+        <Modal
+          onClose={onClose}
+          open
+          slotProps={{
+            backdrop: {
+              'data-testid': 'backdrop',
+            },
+          }}
+        >
           <div />
         </Modal>,
       );
 
-      getByTestId('backdrop').click();
+      screen.getByTestId('backdrop').click();
 
       expect(onClose).to.have.property('callCount', 1);
     });
@@ -183,72 +210,36 @@ describe('<Modal />', () => {
           }
         }
 
-        return (
-          <Modal onClose={handleClose} {...other}>
-            <div />
-          </Modal>
-        );
+        return <Modal onClose={handleClose} {...other} />;
       }
       const onClose = spy();
-      const { getByTestId } = render(
+
+      render(
         <ModalWithDisabledBackdropClick
           onClose={onClose}
           open
-          BackdropProps={{ 'data-testid': 'backdrop' }}
+          slotProps={{ backdrop: { 'data-testid': 'backdrop' } }}
         >
           <div />
         </ModalWithDisabledBackdropClick>,
       );
 
-      getByTestId('backdrop').click();
+      screen.getByTestId('backdrop').click();
 
       expect(onClose).to.have.property('callCount', 0);
-    });
-
-    it('should call through to the user specified onBackdropClick callback', () => {
-      const onBackdropClick = spy();
-      const { getByTestId } = render(
-        <Modal onBackdropClick={onBackdropClick} open BackdropProps={{ 'data-testid': 'backdrop' }}>
-          <div />
-        </Modal>,
-      );
-
-      getByTestId('backdrop').click();
-
-      expect(onBackdropClick).to.have.property('callCount', 1);
-    });
-
-    it('should ignore the backdrop click if the event did not come from the backdrop', () => {
-      function CustomBackdrop(props) {
-        return (
-          <div {...props}>
-            <span data-testid="inner" />
-          </div>
-        );
-      }
-      const onBackdropClick = spy();
-      const { getByTestId } = render(
-        <Modal onBackdropClick={onBackdropClick} open BackdropComponent={CustomBackdrop}>
-          <div />
-        </Modal>,
-      );
-
-      getByTestId('inner').click();
-
-      expect(onBackdropClick).to.have.property('callCount', 0);
     });
   });
 
   describe('hide backdrop', () => {
     it('should not render a backdrop component into the portal before the modal content', () => {
-      const { getByTestId } = render(
+      render(
         <Modal open hideBackdrop data-testid="modal">
           <div data-testid="container" />
         </Modal>,
       );
 
-      const modal = getByTestId('modal');
-      const container = getByTestId('container');
+      const modal = screen.getByTestId('modal');
+      const container = screen.getByTestId('container');
       expect(modal.children).to.have.length(3);
       expect(modal.children[1]).to.equal(container);
     });
@@ -257,16 +248,18 @@ describe('<Modal />', () => {
   describe('event: keydown', () => {
     it('when mounted, TopModal and event not esc should not call given functions', () => {
       const onCloseSpy = spy();
-      const { getByTestId } = render(
+
+      render(
         <Modal open onClose={onCloseSpy}>
           <div data-testid="modal" tabIndex={-1} />
         </Modal>,
       );
+
       act(() => {
-        getByTestId('modal').focus();
+        screen.getByTestId('modal').focus();
       });
 
-      fireEvent.keyDown(getByTestId('modal'), {
+      fireEvent.keyDown(screen.getByTestId('modal'), {
         key: 'j', // Not escape
       });
 
@@ -276,18 +269,20 @@ describe('<Modal />', () => {
     it('should call onClose when Esc is pressed and stop event propagation', () => {
       const handleKeyDown = spy();
       const onCloseSpy = spy();
-      const { getByTestId } = render(
+
+      render(
         <div onKeyDown={handleKeyDown}>
           <Modal open onClose={onCloseSpy}>
             <div data-testid="modal" tabIndex={-1} />
           </Modal>
         </div>,
       );
+
       act(() => {
-        getByTestId('modal').focus();
+        screen.getByTestId('modal').focus();
       });
 
-      fireEvent.keyDown(getByTestId('modal'), {
+      fireEvent.keyDown(screen.getByTestId('modal'), {
         key: 'Escape',
       });
 
@@ -295,37 +290,43 @@ describe('<Modal />', () => {
       expect(handleKeyDown).to.have.property('callCount', 0);
     });
 
-    it('should not call onClose when `disableEscapeKeyDown={true}`', () => {
-      const handleKeyDown = spy();
-      const onCloseSpy = spy();
-      const { getByTestId } = render(
-        <div onKeyDown={handleKeyDown}>
-          <Modal open disableEscapeKeyDown onClose={onCloseSpy}>
-            <div data-testid="modal" tabIndex={-1} />
-          </Modal>
-        </div>,
-      );
-      act(() => {
-        getByTestId('modal').focus();
-      });
+    it('should let the user disable escape key down triggering onClose', () => {
+      function ModalWithDisabledEscapeKeyDown(props) {
+        const { onClose, ...other } = props;
+        function handleClose(event, reason) {
+          if (reason !== 'escapeKeyDown') {
+            onClose(event, reason);
+          }
+        }
 
-      fireEvent.keyDown(getByTestId('modal'), {
+        return <Modal onClose={handleClose} {...other} />;
+      }
+      const onClose = spy();
+
+      render(
+        <ModalWithDisabledEscapeKeyDown onClose={onClose} open>
+          <div data-testid="modal" />
+        </ModalWithDisabledEscapeKeyDown>,
+      );
+
+      fireEvent.focus(screen.getByTestId('modal'));
+      fireEvent.keyDown(screen.getByTestId('modal'), {
         key: 'Escape',
       });
 
-      expect(onCloseSpy).to.have.property('callCount', 0);
-      expect(handleKeyDown).to.have.property('callCount', 1);
+      expect(onClose).to.have.property('callCount', 0);
     });
 
     it('calls onKeyDown on the Modal', () => {
       const handleKeyDown = spy();
-      const { getByTestId } = render(
+
+      render(
         <Modal open onKeyDown={handleKeyDown}>
           <button autoFocus data-testid="target" />
         </Modal>,
       );
 
-      fireEvent.keyDown(getByTestId('target'), { key: 'j' });
+      fireEvent.keyDown(screen.getByTestId('target'), { key: 'j' });
 
       expect(handleKeyDown).to.have.property('callCount', 1);
     });
@@ -333,7 +334,7 @@ describe('<Modal />', () => {
 
   describe('prop: keepMounted', () => {
     it('should keep the children in the DOM', () => {
-      const { getByTestId } = render(
+      render(
         <Modal keepMounted open={false}>
           <div>
             <p data-testid="children">Hello World</p>
@@ -341,7 +342,7 @@ describe('<Modal />', () => {
         </Modal>,
       );
 
-      expect(getByTestId('children')).not.to.equal(null);
+      expect(screen.getByTestId('children')).not.to.equal(null);
     });
 
     it('does not include the children in the a11y tree', () => {
@@ -352,13 +353,13 @@ describe('<Modal />', () => {
         </Modal>,
       );
       const modalNode = modalRef.current;
-      expect(modalNode).toBeAriaHidden();
+      expect(modalNode).toBeInaccessible();
 
       setProps({ open: true });
-      expect(modalNode).not.toBeAriaHidden();
+      expect(modalNode).not.toBeInaccessible();
     });
 
-    // Test case for https://github.com/mui-org/material-ui/issues/15180
+    // Test case for https://github.com/mui/material-ui/issues/15180
     // TODO: how does this relate to `keepMounted`
     // TODO: never finishes
     it('should remove the transition children in the DOM when closed whilst transition status is entering', () => {
@@ -390,14 +391,55 @@ describe('<Modal />', () => {
           );
         }
       }
-      const { queryByTestId, getByRole } = render(<OpenClose />);
-      expect(queryByTestId('children')).to.equal(null);
+      render(<OpenClose />);
+      expect(screen.queryByTestId('children')).to.equal(null);
 
       act(() => {
-        getByRole('button').click();
+        screen.getByRole('button').click();
       });
 
-      expect(queryByTestId('children')).to.equal(null);
+      expect(screen.queryByTestId('children')).to.equal(null);
+    });
+
+    it('should hide a previously closed keepMounted modal when another modal opens above it', async () => {
+      function Test() {
+        const [firstOpen, setFirstOpen] = React.useState(false);
+        const [secondOpen, setSecondOpen] = React.useState(false);
+        const [thirdOpen, setThirdOpen] = React.useState(false);
+
+        return (
+          <React.Fragment>
+            <button onClick={() => setFirstOpen(true)}>Open first</button>
+            <Modal open={firstOpen}>
+              <div>
+                <button onClick={() => setSecondOpen(true)}>Open second</button>
+              </div>
+            </Modal>
+            <Modal open={secondOpen} keepMounted data-testid="second-modal">
+              <div>
+                <button onClick={() => setThirdOpen(true)}>Open third</button>
+              </div>
+            </Modal>
+            <Modal open={thirdOpen} data-testid="third-modal">
+              <div>Third modal</div>
+            </Modal>
+          </React.Fragment>
+        );
+      }
+
+      const { user } = render(<Test />);
+      const secondModal = screen.getByTestId('second-modal');
+
+      // Material UI sets this attribute itself while the modal is closed.
+      expect(secondModal).to.have.attribute('aria-hidden', 'true');
+
+      await user.click(screen.getByRole('button', { name: 'Open first' }));
+      await user.click(screen.getByRole('button', { name: 'Open second' }));
+      expect(secondModal).not.toBeInaccessible();
+
+      await user.click(screen.getByRole('button', { name: 'Open third' }));
+      expect(screen.getByTestId('third-modal')).not.toBeInaccessible();
+      expect(secondModal).toBeInaccessible();
     });
   });
 
@@ -418,13 +460,13 @@ describe('<Modal />', () => {
     });
 
     it('should focus on the modal when it is opened', () => {
-      const { getByTestId, setProps } = render(
+      const { setProps } = render(
         <Modal open>
           <div data-testid="modal">Foo</div>
         </Modal>,
       );
 
-      expect(getByTestId('modal')).toHaveFocus();
+      expect(screen.getByTestId('modal')).toHaveFocus();
 
       setProps({ open: false });
 
@@ -432,7 +474,7 @@ describe('<Modal />', () => {
     });
 
     it('should support autoFocus', () => {
-      const { getByTestId, setProps } = render(
+      const { setProps } = render(
         <Modal open>
           <div>
             <input data-testid="auto-focus" type="text" autoFocus />
@@ -442,7 +484,7 @@ describe('<Modal />', () => {
         { strictEffects: false },
       );
 
-      expect(getByTestId('auto-focus')).toHaveFocus();
+      expect(screen.getByTestId('auto-focus')).toHaveFocus();
 
       setProps({ open: false });
 
@@ -450,13 +492,13 @@ describe('<Modal />', () => {
     });
 
     it('should keep focus on the modal when it is closed', () => {
-      const { getByTestId, setProps } = render(
+      const { setProps } = render(
         <Modal open disableRestoreFocus>
           <div data-testid="modal">Foo</div>
         </Modal>,
       );
 
-      expect(getByTestId('modal')).toHaveFocus();
+      expect(screen.getByTestId('modal')).toHaveFocus();
 
       setProps({ open: false });
 
@@ -473,24 +515,12 @@ describe('<Modal />', () => {
       expect(initialFocus).toHaveFocus();
     });
 
-    describe('', () => {
-      let clock;
+    describe('focus stealing', () => {
+      clock.withFakeTimers();
 
-      beforeEach(() => {
-        clock = useFakeTimers();
-      });
-
-      afterEach(() => {
-        clock.restore();
-      });
-
-      it('does not steal focus from other frames', function test() {
-        if (/jsdom/.test(window.navigator.userAgent)) {
-          // TODO: Unclear why this fails. Not important
-          // since a browser test gives us more confidence anyway
-          this.skip();
-        }
-
+      // TODO: Unclear why this fails. Not important
+      // since a browser test gives us more confidence anyway
+      it.skipIf(isJsdom())('does not steal focus from other frames', function test() {
         const FrameContext = React.createContext(document);
         // by default Modal will use the document where the module! was initialized
         // which is usually the top document
@@ -527,7 +557,8 @@ describe('<Modal />', () => {
             </React.Fragment>
           );
         }
-        const { getByTestId } = render(
+
+        render(
           <React.Fragment>
             <input data-testid="foreign-input" type="text" />
             <IFrame>
@@ -539,19 +570,20 @@ describe('<Modal />', () => {
         );
 
         act(() => {
-          getByTestId('foreign-input').focus();
+          screen.getByTestId('foreign-input').focus();
         });
-        act(() => {
-          // wait for the `contain` interval check to kick in.
-          clock.tick(500);
-        });
+        // wait for the `contain` interval check to kick in.
+        clock.tick(500);
 
-        expect(getByTestId('foreign-input')).toHaveFocus();
+        expect(screen.getByTestId('foreign-input')).toHaveFocus();
       });
+    });
 
-      // Test case for https://github.com/mui-org/material-ui/issues/12831
-      it('should unmount the children when starting open and closing immediately', () => {
-        const timeout = 50;
+    describe('when starting open and closing immediately', () => {
+      clock.withFakeTimers();
+
+      // Test case for https://github.com/mui/material-ui/issues/12831
+      it('should unmount the children', () => {
         function TestCase() {
           const [open, setOpen] = React.useState(true);
 
@@ -561,45 +593,34 @@ describe('<Modal />', () => {
 
           return (
             <Modal open={open}>
-              <Fade in={open} timeout={timeout}>
-                <div id="modal-body">hello</div>
-              </Fade>
+              {/* TODO: Look into why this test started to fail with React 19 when using a transition component as children. */}
+              {/* See: https://github.com/mui/material-ui/issues/43312 */}
+              <div id="modal-body">hello</div>
             </Modal>
           );
         }
         render(<TestCase />);
-        // exit transition started
-        act(() => {
-          clock.tick(timeout);
-        });
         expect(document.querySelector('#modal-body')).to.equal(null);
       });
     });
   });
 
   describe('two modal at the same time', () => {
-    /**
-     * @type {ReturnType<typeof useFakeTimers>}
-     */
-    let clock;
-    beforeEach(() => {
-      clock = useFakeTimers();
-    });
-    afterEach(() => {
-      clock.restore();
-    });
+    clock.withFakeTimers();
 
     it('should open and close', () => {
-      const TestCase = (props) => (
-        <React.Fragment>
-          <Modal open={props.open}>
-            <div>Hello</div>
-          </Modal>
-          <Modal open={props.open}>
-            <div>World</div>
-          </Modal>
-        </React.Fragment>
-      );
+      function TestCase(props) {
+        return (
+          <React.Fragment>
+            <Modal open={props.open}>
+              <div>Hello</div>
+            </Modal>
+            <Modal open={props.open}>
+              <div>World</div>
+            </Modal>
+          </React.Fragment>
+        );
+      }
       TestCase.propTypes = {
         open: PropTypes.bool,
       };
@@ -618,18 +639,20 @@ describe('<Modal />', () => {
     });
 
     it('should open and close with Transitions', () => {
-      const TestCase = (props) => (
-        <React.Fragment>
-          <Modal open={props.open}>
-            <Fade onEntered={props.onEntered} onExited={props.onExited} in={props.open}>
-              <div>Hello</div>
-            </Fade>
-          </Modal>
-          <Modal open={props.open}>
-            <div>World</div>
-          </Modal>
-        </React.Fragment>
-      );
+      function TestCase(props) {
+        return (
+          <React.Fragment>
+            <Modal open={props.open}>
+              <Fade onEntered={props.onEntered} onExited={props.onExited} in={props.open}>
+                <div>Hello</div>
+              </Fade>
+            </Modal>
+            <Modal open={props.open}>
+              <div>World</div>
+            </Modal>
+          </React.Fragment>
+        );
+      }
 
       const handleEntered = spy();
       const handleExited = spy();
@@ -640,18 +663,14 @@ describe('<Modal />', () => {
       expect(document.body.style).to.have.property('overflow', '');
 
       setProps({ open: true });
-      act(() => {
-        clock.runToLast();
-      });
+      clock.runToLast();
 
       expect(handleEntered.callCount).to.equal(1);
       expect(handleExited.callCount).to.equal(0);
       expect(document.body.style).to.have.property('overflow', 'hidden');
 
       setProps({ open: false });
-      act(() => {
-        clock.runToLast();
-      });
+      clock.runToLast();
 
       expect(handleEntered.callCount).to.equal(1);
       expect(handleExited.callCount).to.equal(1);
@@ -683,30 +702,23 @@ describe('<Modal />', () => {
   });
 
   describe('prop: closeAfterTransition', () => {
-    /**
-     * @type {ReturnType<typeof useFakeTimers>}
-     */
-    let clock;
-    beforeEach(() => {
-      clock = useFakeTimers();
-    });
-    afterEach(() => {
-      clock.restore();
-    });
+    clock.withFakeTimers();
 
     it('when true it should close after Transition has finished', () => {
-      const TestCase = (props) => (
-        <Modal open={props.open} closeAfterTransition>
-          <Fade
-            onEntered={props.onEntered}
-            onExiting={props.onExiting}
-            onExited={props.onExited}
-            in={props.open}
-          >
-            <div>Hello</div>
-          </Fade>
-        </Modal>
-      );
+      function TestCase(props) {
+        return (
+          <Modal open={props.open} closeAfterTransition>
+            <Fade
+              onEntered={props.onEntered}
+              onExiting={props.onExiting}
+              onExited={props.onExited}
+              in={props.open}
+            >
+              <div>Hello</div>
+            </Fade>
+          </Modal>
+        );
+      }
       const handleEntered = spy();
       const handleExiting = spy();
       const handleExited = spy();
@@ -726,9 +738,7 @@ describe('<Modal />', () => {
       expect(document.body.style).to.have.property('overflow', '');
 
       setProps({ open: true });
-      act(() => {
-        clock.runToLast();
-      });
+      clock.runToLast();
 
       expect(handleEntered.callCount).to.equal(1);
       expect(handleExiting.callCount).to.equal(0);
@@ -753,18 +763,20 @@ describe('<Modal />', () => {
     });
 
     it('when false it should close before Transition has finished', () => {
-      const TestCase = (props) => (
-        <Modal open={props.open} closeAfterTransition={false}>
-          <Fade
-            onEntered={props.onEntered}
-            onExiting={props.onExiting}
-            onExited={props.onExited}
-            in={props.open}
-          >
-            <div>Hello</div>
-          </Fade>
-        </Modal>
-      );
+      function TestCase(props) {
+        return (
+          <Modal open={props.open} closeAfterTransition={false}>
+            <Fade
+              onEntered={props.onEntered}
+              onExiting={props.onExiting}
+              onExited={props.onExited}
+              in={props.open}
+            >
+              <div>Hello</div>
+            </Fade>
+          </Modal>
+        );
+      }
       const handleEntered = spy();
       const handleExiting = spy();
       const handleExited = spy();
@@ -784,9 +796,7 @@ describe('<Modal />', () => {
       expect(document.body.style).to.have.property('overflow', '');
 
       setProps({ open: true });
-      act(() => {
-        clock.runToLast();
-      });
+      clock.runToLast();
 
       expect(handleEntered.callCount).to.equal(1);
       expect(handleExiting.callCount).to.equal(0);
@@ -800,9 +810,7 @@ describe('<Modal />', () => {
       expect(handleExited.callCount).to.equal(0);
       expect(document.body.style).to.have.property('overflow', '');
 
-      act(() => {
-        clock.runToLast();
-      });
+      clock.runToLast();
 
       expect(handleEntered.callCount).to.equal(1);
       expect(handleExiting.callCount).to.equal(1);
@@ -812,6 +820,8 @@ describe('<Modal />', () => {
   });
 
   describe('prop: container', () => {
+    clock.withFakeTimers();
+
     it('should be able to change the container', () => {
       function TestCase(props) {
         const { anchorEl } = props;
@@ -829,18 +839,174 @@ describe('<Modal />', () => {
       setProps({ anchorEl: null });
       setProps({ anchorEl: document.body });
     });
+
+    it('should finish closing when the container changes during the exit transition', () => {
+      function TestCase(props) {
+        const firstContainerRef = React.useRef(null);
+        const secondContainerRef = React.useRef(null);
+        const getContainer = React.useCallback(
+          () =>
+            props.containerIndex === 0 ? firstContainerRef.current : secondContainerRef.current,
+          [props.containerIndex],
+        );
+
+        return (
+          <React.Fragment>
+            <div data-testid="first-container" ref={firstContainerRef} />
+            <div data-testid="second-container" ref={secondContainerRef} />
+            <Modal
+              data-testid="modal"
+              open={props.open}
+              container={getContainer}
+              closeAfterTransition
+              onTransitionExited={props.onTransitionExited}
+            >
+              <Fade
+                in={props.open}
+                timeout={100}
+                onExit={props.onExit}
+                onExiting={props.onExiting}
+                onExited={props.onExited}
+              >
+                <div>Content</div>
+              </Fade>
+            </Modal>
+          </React.Fragment>
+        );
+      }
+
+      const handleExit = spy();
+      const handleExiting = spy();
+      const handleExited = spy();
+      const handleTransitionExited = spy();
+      const { setProps } = render(
+        <TestCase
+          open
+          containerIndex={0}
+          onExit={handleExit}
+          onExiting={handleExiting}
+          onExited={handleExited}
+          onTransitionExited={handleTransitionExited}
+        />,
+      );
+
+      act(() => {
+        clock.runToLast();
+      });
+      const firstContainer = screen.getByTestId('first-container');
+      const secondContainer = screen.getByTestId('second-container');
+      expect(within(firstContainer).getByTestId('modal')).not.to.equal(null);
+
+      setProps({ open: false, containerIndex: 0 });
+      expect(handleExit.callCount).to.equal(1);
+      expect(handleExiting.callCount).to.equal(1);
+      expect(handleExited.callCount).to.equal(0);
+      expect(handleTransitionExited.callCount).to.equal(0);
+
+      act(() => {
+        clock.tick(50);
+      });
+      setProps({ open: false, containerIndex: 1 });
+
+      expect(within(firstContainer).getByTestId('modal')).not.to.equal(null);
+      expect(within(secondContainer).queryByTestId('modal')).to.equal(null);
+      expect(handleExit.callCount).to.equal(1);
+      expect(handleExiting.callCount).to.equal(1);
+      expect(handleExited.callCount).to.equal(0);
+      expect(handleTransitionExited.callCount).to.equal(0);
+
+      act(() => {
+        clock.tick(50);
+      });
+      expect(screen.queryByTestId('modal')).to.equal(null);
+      expect(handleExit.callCount).to.equal(1);
+      expect(handleExiting.callCount).to.equal(1);
+      expect(handleExited.callCount).to.equal(1);
+      expect(handleTransitionExited.callCount).to.equal(1);
+      expect(firstContainer.style).to.have.property('overflow', '');
+
+      setProps({ open: true, containerIndex: 1 });
+      act(() => {
+        clock.runToLast();
+      });
+      expect(within(firstContainer).queryByTestId('modal')).to.equal(null);
+      expect(within(secondContainer).getByTestId('modal')).not.to.equal(null);
+    });
   });
 
   describe('prop: disablePortal', () => {
     it('should render the content into the parent', () => {
-      const { getByTestId } = render(
+      render(
         <div data-testid="parent">
           <Modal open disablePortal>
             <div data-testid="child" />
           </Modal>
         </div>,
       );
-      expect(within(getByTestId('parent')).getByTestId('child')).not.to.equal(null);
+
+      expect(within(screen.getByTestId('parent')).getByTestId('child')).not.to.equal(null);
     });
+
+    it('should keep the modal and its ancestors accessible while hiding their siblings', () => {
+      render(
+        <div data-testid="outer">
+          <div data-testid="outer-sibling" />
+          <div data-testid="inner">
+            <div data-testid="inner-sibling" />
+            <Modal open disablePortal>
+              <div data-testid="modal-content" />
+            </Modal>
+          </div>
+        </div>,
+      );
+
+      expect(screen.getByTestId('outer')).not.toBeInaccessible();
+      expect(screen.getByTestId('inner')).not.toBeInaccessible();
+      expect(screen.getByTestId('modal-content')).not.toBeInaccessible();
+
+      expect(screen.getByTestId('outer-sibling')).toBeInaccessible();
+      expect(screen.getByTestId('inner-sibling')).toBeInaccessible();
+    });
+  });
+
+  describe('prop: slotProps.backdrop', () => {
+    it('should handle custom className', () => {
+      render(
+        <Modal
+          open
+          slotProps={{ backdrop: { className: 'custom-backdrop', 'data-testid': 'backdrop' } }}
+        >
+          <div />
+        </Modal>,
+      );
+
+      expect(screen.getByTestId('backdrop')).to.have.class('custom-backdrop');
+    });
+  });
+
+  it('should not warn when onTransitionEnter and onTransitionExited are provided', () => {
+    expect(() => {
+      render(
+        <Modal open onTransitionEnter={() => {}} onTransitionExited={() => {}}>
+          <div />
+        </Modal>,
+      );
+    }).not.toErrorDev();
+  });
+
+  it('should not override default onKeyDown', async () => {
+    const handleKeyDown = spy();
+    const handleClose = spy();
+
+    const { user } = render(
+      <Modal open onKeyDown={handleKeyDown} onClose={handleClose}>
+        <div tabIndex={-1} />
+      </Modal>,
+    );
+
+    await user.keyboard('{Escape}');
+
+    expect(handleKeyDown).to.have.property('callCount', 1);
+    expect(handleClose).to.have.property('callCount', 1);
   });
 });

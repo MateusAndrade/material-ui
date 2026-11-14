@@ -1,0 +1,188 @@
+{
+  "props": {
+    "avatar": { "type": { "name": "element" } },
+    "children": { "type": { "name": "custom", "description": "unsupportedProp" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "clickable": { "type": { "name": "bool" } },
+    "color": {
+      "type": {
+        "name": "union",
+        "description": "'default'<br>&#124;&nbsp;'primary'<br>&#124;&nbsp;'secondary'<br>&#124;&nbsp;'error'<br>&#124;&nbsp;'info'<br>&#124;&nbsp;'success'<br>&#124;&nbsp;'warning'<br>&#124;&nbsp;string"
+      },
+      "default": "'default'"
+    },
+    "component": { "type": { "name": "elementType" } },
+    "deleteIcon": { "type": { "name": "element" } },
+    "disabled": { "type": { "name": "bool" }, "default": "false" },
+    "icon": { "type": { "name": "element" } },
+    "label": { "type": { "name": "node" } },
+    "nativeButton": { "type": { "name": "bool" } },
+    "onDelete": { "type": { "name": "func" } },
+    "size": {
+      "type": {
+        "name": "union",
+        "description": "'medium'<br>&#124;&nbsp;'small'<br>&#124;&nbsp;string"
+      },
+      "default": "'medium'"
+    },
+    "skipFocusWhenDisabled": { "type": { "name": "bool" }, "default": "false" },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ label?: func<br>&#124;&nbsp;object, root?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": { "name": "shape", "description": "{ label?: elementType, root?: elementType }" },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "variant": {
+      "type": {
+        "name": "union",
+        "description": "'filled'<br>&#124;&nbsp;'outlined'<br>&#124;&nbsp;string"
+      },
+      "default": "'filled'"
+    }
+  },
+  "name": "Chip",
+  "imports": ["import Chip from '@mui/material/Chip';", "import { Chip } from '@mui/material';"],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "default": "'div'",
+      "class": "MuiChip-root"
+    },
+    {
+      "name": "label",
+      "description": "The component that renders the label.",
+      "default": "'span'",
+      "class": "MuiChip-label"
+    }
+  ],
+  "classes": [
+    {
+      "key": "avatar",
+      "className": "MuiChip-avatar",
+      "description": "Styles applied to the avatar element.",
+      "isGlobal": false
+    },
+    {
+      "key": "clickable",
+      "className": "MuiChip-clickable",
+      "description": "Styles applied to the root element if `onClick` is defined or `clickable={true}`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorDefault",
+      "className": "MuiChip-colorDefault",
+      "description": "Styles applied to the root element if `color=\"default\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorError",
+      "className": "MuiChip-colorError",
+      "description": "Styles applied to the root element if `color=\"error\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorInfo",
+      "className": "MuiChip-colorInfo",
+      "description": "Styles applied to the root element if `color=\"info\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorPrimary",
+      "className": "MuiChip-colorPrimary",
+      "description": "Styles applied to the root element if `color=\"primary\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorSecondary",
+      "className": "MuiChip-colorSecondary",
+      "description": "Styles applied to the root element if `color=\"secondary\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorSuccess",
+      "className": "MuiChip-colorSuccess",
+      "description": "Styles applied to the root element if `color=\"success\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorWarning",
+      "className": "MuiChip-colorWarning",
+      "description": "Styles applied to the root element if `color=\"warning\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "deletable",
+      "className": "MuiChip-deletable",
+      "description": "Styles applied to the root element if `onDelete` is defined.",
+      "isGlobal": false
+    },
+    {
+      "key": "deleteIcon",
+      "className": "MuiChip-deleteIcon",
+      "description": "Styles applied to the deleteIcon element.",
+      "isGlobal": false
+    },
+    {
+      "key": "disabled",
+      "className": "Mui-disabled",
+      "description": "State class applied to the root element if `disabled={true}`.",
+      "isGlobal": true
+    },
+    {
+      "key": "filled",
+      "className": "MuiChip-filled",
+      "description": "Styles applied to the root element if `variant=\"filled\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "focusVisible",
+      "className": "Mui-focusVisible",
+      "description": "State class applied to the root element if keyboard focused.",
+      "isGlobal": true
+    },
+    {
+      "key": "icon",
+      "className": "MuiChip-icon",
+      "description": "Styles applied to the icon element.",
+      "isGlobal": false
+    },
+    {
+      "key": "outlined",
+      "className": "MuiChip-outlined",
+      "description": "Styles applied to the root element if `variant=\"outlined\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "sizeMedium",
+      "className": "MuiChip-sizeMedium",
+      "description": "Styles applied to the root element if `size=\"medium\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "sizeSmall",
+      "className": "MuiChip-sizeSmall",
+      "description": "Styles applied to the root element if `size=\"small\"`.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiChip",
+  "forwardsRefTo": "HTMLDivElement",
+  "filename": "/packages/mui-material/src/Chip/Chip.js",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/material-ui/react-chip/\">Chip</a></li></ul>"
+}

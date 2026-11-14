@@ -1,0 +1,110 @@
+{
+  "props": {
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "color": {
+      "type": {
+        "name": "union",
+        "description": "'inherit'<br>&#124;&nbsp;'primary'<br>&#124;&nbsp;'secondary'<br>&#124;&nbsp;string"
+      },
+      "default": "'primary'"
+    },
+    "max": { "type": { "name": "number" }, "default": "100" },
+    "min": { "type": { "name": "number" }, "default": "0" },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "value": { "type": { "name": "number" } },
+    "valueBuffer": { "type": { "name": "number" } },
+    "variant": {
+      "type": {
+        "name": "enum",
+        "description": "'buffer'<br>&#124;&nbsp;'determinate'<br>&#124;&nbsp;'indeterminate'<br>&#124;&nbsp;'query'"
+      },
+      "default": "'indeterminate'"
+    }
+  },
+  "name": "LinearProgress",
+  "imports": [
+    "import LinearProgress from '@mui/material/LinearProgress';",
+    "import { LinearProgress } from '@mui/material';"
+  ],
+  "classes": [
+    {
+      "key": "bar",
+      "className": "MuiLinearProgress-bar",
+      "description": "Styles applied to the layered bar1 and bar2 elements.",
+      "isGlobal": false
+    },
+    {
+      "key": "bar1",
+      "className": "MuiLinearProgress-bar1",
+      "description": "Styles applied to the bar1 element.",
+      "isGlobal": false
+    },
+    {
+      "key": "bar2",
+      "className": "MuiLinearProgress-bar2",
+      "description": "Styles applied to the bar2 element.",
+      "isGlobal": false
+    },
+    {
+      "key": "buffer",
+      "className": "MuiLinearProgress-buffer",
+      "description": "Styles applied to the root element if `variant=\"buffer\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorPrimary",
+      "className": "MuiLinearProgress-colorPrimary",
+      "description": "Styles applied to the root and bar2 element if `color=\"primary\"`; bar2 if `variant=\"buffer\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "colorSecondary",
+      "className": "MuiLinearProgress-colorSecondary",
+      "description": "Styles applied to the root and bar2 elements if `color=\"secondary\"`; bar2 if `variant=\"buffer\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "dashed",
+      "className": "MuiLinearProgress-dashed",
+      "description": "Styles applied to the additional bar element if `variant=\"buffer\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "determinate",
+      "className": "MuiLinearProgress-determinate",
+      "description": "Styles applied to the root element if `variant=\"determinate\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "indeterminate",
+      "className": "MuiLinearProgress-indeterminate",
+      "description": "Styles applied to the root element if `variant=\"indeterminate\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "query",
+      "className": "MuiLinearProgress-query",
+      "description": "Styles applied to the root element if `variant=\"query\"`.",
+      "isGlobal": false
+    },
+    {
+      "key": "root",
+      "className": "MuiLinearProgress-root",
+      "description": "Styles applied to the root element.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiLinearProgress",
+  "forwardsRefTo": "HTMLSpanElement",
+  "filename": "/packages/mui-material/src/LinearProgress/LinearProgress.js",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/material-ui/react-progress/\">Progress</a></li></ul>"
+}

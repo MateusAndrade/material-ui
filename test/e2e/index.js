@@ -1,22 +1,23 @@
 import * as React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import * as ReactDOMClient from 'react-dom/client';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router';
 import * as DomTestingLibrary from '@testing-library/dom';
 import TestViewer from './TestViewer';
 
 const fixtures = [];
 
-const importFixtures = require.context('./fixtures', true, /\.(js|ts|tsx)$/, 'lazy');
-importFixtures.keys().forEach((path) => {
+const importFixtures = import.meta.glob('./fixtures/**/*.{js,ts,tsx}');
+
+Object.keys(importFixtures).forEach((path) => {
   const [suite, name] = path
-    .replace('./', '')
+    .replace('./fixtures/', '')
     .replace(/\.\w+$/, '')
     .split('/');
   fixtures.push({
     path,
     suite: `e2e/${suite}`,
     name,
-    Component: React.lazy(() => importFixtures(path)),
+    Component: React.lazy(importFixtures[path]),
   });
 });
 
@@ -28,7 +29,7 @@ function App() {
     if (window.location.hash === '#no-dev') {
       return false;
     }
-    return process.env.NODE_ENV === 'development';
+    return process.env.NODE_ENV !== 'production';
   }
   const [isDev, setDev] = React.useState(computeIsDev);
   React.useEffect(() => {
@@ -48,7 +49,7 @@ function App() {
 
   return (
     <Router>
-      <Switch>
+      <Routes>
         {fixtures.map((fixture) => {
           const path = computePath(fixture);
           const FixtureComponent = fixture.Component;
@@ -58,14 +59,19 @@ function App() {
           }
 
           return (
-            <Route key={path} exact path={path}>
-              <TestViewer>
-                <FixtureComponent />
-              </TestViewer>
-            </Route>
+            <Route
+              key={path}
+              exact
+              path={path}
+              element={
+                <TestViewer>
+                  <FixtureComponent />
+                </TestViewer>
+              }
+            />
           );
         })}
-      </Switch>
+      </Routes>
       <div hidden={!isDev}>
         <p>
           Devtools can be enabled by appending <code>#dev</code> in the addressbar or disabled by
@@ -94,12 +100,8 @@ function App() {
 
 const container = document.getElementById('react-root');
 const children = <App />;
-if (typeof ReactDOM.unstable_createRoot === 'function') {
-  const root = ReactDOM.unstable_createRoot(container);
-  root.render(children);
-} else {
-  ReactDOM.render(children, container);
-}
+const root = ReactDOMClient.createRoot(container);
+root.render(children);
 
 window.DomTestingLibrary = DomTestingLibrary;
 window.elementToString = function elementToString(element) {

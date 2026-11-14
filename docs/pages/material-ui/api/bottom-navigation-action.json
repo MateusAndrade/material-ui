@@ -1,0 +1,69 @@
+{
+  "props": {
+    "children": { "type": { "name": "custom", "description": "unsupportedProp" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "icon": { "type": { "name": "node" } },
+    "label": { "type": { "name": "node" } },
+    "selected": { "type": { "name": "bool" } },
+    "showLabel": { "type": { "name": "bool" } },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ label?: func<br>&#124;&nbsp;object, root?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": { "name": "shape", "description": "{ label?: elementType, root?: elementType }" },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "value": { "type": { "name": "any" } }
+  },
+  "name": "BottomNavigationAction",
+  "imports": [
+    "import BottomNavigationAction from '@mui/material/BottomNavigationAction';",
+    "import { BottomNavigationAction } from '@mui/material';"
+  ],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "default": "ButtonBase",
+      "class": "MuiBottomNavigationAction-root"
+    },
+    {
+      "name": "label",
+      "description": "The component that renders the label.",
+      "default": "'span'",
+      "class": "MuiBottomNavigationAction-label"
+    }
+  ],
+  "classes": [
+    {
+      "key": "iconOnly",
+      "className": "MuiBottomNavigationAction-iconOnly",
+      "description": "State class applied to the root element if `showLabel={false}` and not selected.",
+      "isGlobal": false
+    },
+    {
+      "key": "selected",
+      "className": "Mui-selected",
+      "description": "State class applied to the root element if selected.",
+      "isGlobal": true
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiBottomNavigationAction",
+  "forwardsRefTo": "HTMLButtonElement",
+  "filename": "/packages/mui-material/src/BottomNavigationAction/BottomNavigationAction.js",
+  "inheritance": { "component": "ButtonBase", "pathname": "/material-ui/api/button-base/" },
+  "demos": "<ul><li><a href=\"/material-ui/react-bottom-navigation/\">Bottom Navigation</a></li></ul>"
+}

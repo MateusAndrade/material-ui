@@ -1,16 +1,20 @@
+'use client';
 import * as React from 'react';
 import { isFragment } from 'react-is';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { chainPropTypes } from '@mui/utils';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import chainPropTypes from '@mui/utils/chainPropTypes';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import Collapse from '../Collapse';
 import Paper from '../Paper';
 import AccordionContext from './AccordionContext';
 import useControlled from '../utils/useControlled';
+import useSlot from '../utils/useSlot';
 import accordionClasses, { getAccordionUtilityClass } from './accordionClasses';
+import { getTransitionStyles } from '../transitions/utils';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, square, expanded, disabled, disableGutters } = ownerState;
@@ -23,6 +27,7 @@ const useUtilityClasses = (ownerState) => {
       disabled && 'disabled',
       !disableGutters && 'gutters',
     ],
+    heading: ['heading'],
     region: ['region'],
   };
 
@@ -43,16 +48,16 @@ const AccordionRoot = styled(Paper, {
     ];
   },
 })(
-  ({ theme }) => {
+  memoTheme(({ theme }) => {
     const transition = {
       duration: theme.transitions.duration.shortest,
     };
 
     return {
       position: 'relative',
-      transition: theme.transitions.create(['margin'], transition),
+      ...getTransitionStyles(theme, ['margin'], transition),
       overflowAnchor: 'none', // Keep the same scrolling position
-      '&:before': {
+      '&::before': {
         position: 'absolute',
         left: 0,
         top: -1,
@@ -60,16 +65,16 @@ const AccordionRoot = styled(Paper, {
         height: 1,
         content: '""',
         opacity: 1,
-        backgroundColor: theme.palette.divider,
-        transition: theme.transitions.create(['opacity', 'background-color'], transition),
+        backgroundColor: (theme.vars || theme).palette.divider,
+        ...getTransitionStyles(theme, ['opacity', 'background-color'], transition),
       },
       '&:first-of-type': {
-        '&:before': {
+        '&::before': {
           display: 'none',
         },
       },
       [`&.${accordionClasses.expanded}`]: {
-        '&:before': {
+        '&::before': {
           opacity: 0,
         },
         '&:first-of-type': {
@@ -79,43 +84,63 @@ const AccordionRoot = styled(Paper, {
           marginBottom: 0,
         },
         '& + &': {
-          '&:before': {
+          '&::before': {
             display: 'none',
           },
         },
       },
       [`&.${accordionClasses.disabled}`]: {
-        backgroundColor: theme.palette.action.disabledBackground,
+        backgroundColor: (theme.vars || theme).palette.action.disabledBackground,
       },
     };
-  },
-  ({ theme, ownerState }) => ({
-    ...(!ownerState.square && {
-      borderRadius: 0,
-      '&:first-of-type': {
-        borderTopLeftRadius: theme.shape.borderRadius,
-        borderTopRightRadius: theme.shape.borderRadius,
-      },
-      '&:last-of-type': {
-        borderBottomLeftRadius: theme.shape.borderRadius,
-        borderBottomRightRadius: theme.shape.borderRadius,
-        // Fix a rendering issue on Edge
-        '@supports (-ms-ime-align: auto)': {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
+  }),
+  memoTheme(({ theme }) => ({
+    variants: [
+      {
+        props: (props) => !props.square,
+        style: {
+          borderRadius: 0,
+          '&:first-of-type': {
+            borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+            borderTopRightRadius: (theme.vars || theme).shape.borderRadius,
+          },
+          '&:last-of-type': {
+            borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
+            borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
+            // Fix a rendering issue on Edge
+            '@supports (-ms-ime-align: auto)': {
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+            },
+          },
         },
       },
-    }),
-    ...(!ownerState.disableGutters && {
-      [`&.${accordionClasses.expanded}`]: {
-        margin: '16px 0',
+      {
+        props: (props) => !props.disableGutters,
+        style: {
+          [`&.${accordionClasses.expanded}`]: {
+            margin: '16px 0',
+          },
+        },
       },
-    }),
-  }),
+    ],
+  })),
 );
 
+const AccordionHeading = styled('h3', {
+  name: 'MuiAccordion',
+  slot: 'Heading',
+})({
+  all: 'unset',
+});
+
+const AccordionRegion = styled('div', {
+  name: 'MuiAccordion',
+  slot: 'Region',
+})({});
+
 const Accordion = React.forwardRef(function Accordion(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiAccordion' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiAccordion' });
   const {
     children: childrenProp,
     className,
@@ -124,9 +149,8 @@ const Accordion = React.forwardRef(function Accordion(inProps, ref) {
     disableGutters = false,
     expanded: expandedProp,
     onChange,
-    square = false,
-    TransitionComponent = Collapse,
-    TransitionProps,
+    slots = {},
+    slotProps = {},
     ...other
   } = props;
 
@@ -156,7 +180,6 @@ const Accordion = React.forwardRef(function Accordion(inProps, ref) {
 
   const ownerState = {
     ...props,
-    square,
     disabled,
     disableGutters,
     expanded,
@@ -164,34 +187,65 @@ const Accordion = React.forwardRef(function Accordion(inProps, ref) {
 
   const classes = useUtilityClasses(ownerState);
 
+  const externalForwardedProps = {
+    slots,
+    slotProps,
+  };
+
+  const [RootSlot, rootProps] = useSlot('root', {
+    elementType: AccordionRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other,
+    },
+    className: clsx(classes.root, className),
+    shouldForwardComponentProp: true,
+    ownerState,
+    ref,
+  });
+
+  const [AccordionHeadingSlot, accordionProps] = useSlot('heading', {
+    elementType: AccordionHeading,
+    externalForwardedProps,
+    className: classes.heading,
+    ownerState,
+  });
+
+  const [TransitionSlot, transitionProps] = useSlot('transition', {
+    elementType: Collapse,
+    externalForwardedProps,
+    ownerState,
+  });
+
+  const [AccordionRegionSlot, accordionRegionProps] = useSlot('region', {
+    elementType: AccordionRegion,
+    externalForwardedProps,
+    ownerState,
+    className: classes.region,
+    additionalProps: {
+      'aria-labelledby': summary.props.id,
+      id: summary.props['aria-controls'],
+      role: 'region',
+    },
+  });
+
   return (
-    <AccordionRoot
-      className={clsx(classes.root, className)}
-      ref={ref}
-      ownerState={ownerState}
-      square={square}
-      {...other}
-    >
-      <AccordionContext.Provider value={contextValue}>{summary}</AccordionContext.Provider>
-      <TransitionComponent in={expanded} timeout="auto" {...TransitionProps}>
-        <div
-          aria-labelledby={summary.props.id}
-          id={summary.props['aria-controls']}
-          role="region"
-          className={classes.region}
-        >
-          {children}
-        </div>
-      </TransitionComponent>
-    </AccordionRoot>
+    <RootSlot {...rootProps}>
+      <AccordionHeadingSlot {...accordionProps}>
+        <AccordionContext.Provider value={contextValue}>{summary}</AccordionContext.Provider>
+      </AccordionHeadingSlot>
+      <TransitionSlot in={expanded} timeout="auto" {...transitionProps}>
+        <AccordionRegionSlot {...accordionRegionProps}>{children}</AccordionRegionSlot>
+      </TransitionSlot>
+    </RootSlot>
   );
 });
 
 Accordion.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -215,7 +269,7 @@ Accordion.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -229,12 +283,12 @@ Accordion.propTypes /* remove-proptypes */ = {
    */
   disabled: PropTypes.bool,
   /**
-   * If `true`, it removes the margin between two expanded accordion items and the increase of height.
+   * If `true`, it removes the margin between two expanded accordion items and prevents the increased height when expanded.
    * @default false
    */
   disableGutters: PropTypes.bool,
   /**
-   * If `true`, expands the accordion, otherwise collapse it.
+   * If `true`, expands the accordion, otherwise collapses it.
    * Setting this prop enables control over the accordion.
    */
   expanded: PropTypes.bool,
@@ -246,25 +300,33 @@ Accordion.propTypes /* remove-proptypes */ = {
    */
   onChange: PropTypes.func,
   /**
-   * If `true`, rounded corners are disabled.
-   * @default false
+   * The props used for each slot inside.
+   * @default {}
    */
-  square: PropTypes.bool,
+  slotProps: PropTypes.shape({
+    heading: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    region: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    root: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+    transition: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  }),
+  /**
+   * The components used for each slot inside.
+   * @default {}
+   */
+  slots: PropTypes.shape({
+    heading: PropTypes.elementType,
+    region: PropTypes.elementType,
+    root: PropTypes.elementType,
+    transition: PropTypes.elementType,
+  }),
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
-  /**
-   * The component used for the transition.
-   * [Follow this guide](/components/transitions/#transitioncomponent-prop) to learn more about the requirements for this component.
-   * @default Collapse
-   */
-  TransitionComponent: PropTypes.elementType,
-  /**
-   * Props applied to the transition element.
-   * By default, the element is based on this [`Transition`](https://reactcommunity.org/react-transition-group/transition) component.
-   */
-  TransitionProps: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default Accordion;

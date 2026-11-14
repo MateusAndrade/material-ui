@@ -1,0 +1,54 @@
+{
+  "name": "@mui/internal-scripts",
+  "version": "4.0.0",
+  "author": "MUI Team",
+  "description": "Utilities supporting MUI libraries build and docs generation. This is an internal package not meant for general use.",
+  "license": "MIT",
+  "exports": {
+    "./typescript-to-proptypes": {
+      "types": "./build/typescript-to-proptypes/index.d.ts",
+      "default": "./build/typescript-to-proptypes/index.js"
+    },
+    "./generate-llms-txt": {
+      "types": "./build/generate-llms-txt/index.d.ts",
+      "default": "./build/generate-llms-txt/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mui/material-ui.git",
+    "directory": "packages-internal/scripts"
+  },
+  "scripts": {
+    "prebuild": "rimraf ./build",
+    "build": "tsc -b tsconfig.json",
+    "release:publish": "pnpm build && pnpm publish --tag latest",
+    "release:publish:dry-run": "pnpm build && pnpm publish --tag latest --registry=\"http://localhost:4873/\"",
+    "test": "pnpm --workspace-root test:unit --project \"*:@mui/internal-scripts\"",
+    "typescript": "tsc -b tsconfig.typecheck.json"
+  },
+  "dependencies": {
+    "@babel/core": "^8.1.0",
+    "@babel/plugin-syntax-jsx": "^8.0.1",
+    "@babel/plugin-syntax-typescript": "^8.0.3",
+    "@babel/types": "^8.1.0",
+    "@mui/internal-docs-infra": "catalog:docs",
+    "@mui/internal-docs-utils": "workspace:^",
+    "@typescript/typescript6": "^6.0.2",
+    "doctrine": "^3.0.0",
+    "es-toolkit": "^1.52.0"
+  },
+  "devDependencies": {
+    "@babel/register": "8.0.6",
+    "@types/doctrine": "0.0.9",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "fast-glob": "3.3.3",
+    "prettier": "3.9.10",
+    "rimraf": "6.1.3",
+    "typescript": "npm:@typescript/typescript6@6.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

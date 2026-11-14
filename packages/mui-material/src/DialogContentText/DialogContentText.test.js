@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it } from 'vitest';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import Typography from '@mui/material/Typography';
 import DialogContentText, {
   dialogContentTextClasses as classes,
 } from '@mui/material/DialogContentText';
+import describeConformance from '../../test/describeConformance';
 
 describe('<DialogContentText />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<DialogContentText>foo</DialogContentText>, () => ({
     classes,
@@ -14,15 +15,15 @@ describe('<DialogContentText />', () => {
     render,
     muiName: 'MuiDialogContentText',
     refInstanceof: window.HTMLParagraphElement,
-    skip: ['componentsProp', 'themeVariants'],
+    skip: ['themeVariants'],
   }));
 
   describe('prop: children', () => {
     it('should render children', () => {
       const children = <span data-testid="test-children" />;
-      const { getByTestId } = render(<DialogContentText>{children}</DialogContentText>);
+      render(<DialogContentText>{children}</DialogContentText>);
 
-      getByTestId('test-children');
+      screen.getByTestId('test-children');
     });
   });
 });

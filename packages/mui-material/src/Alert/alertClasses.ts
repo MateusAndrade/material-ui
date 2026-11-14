@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface AlertClasses {
   /** Styles applied to the root element. */
@@ -9,30 +10,14 @@ export interface AlertClasses {
   outlined: string;
   /** Styles applied to the root element if `variant="standard"`. */
   standard: string;
-  /** Styles applied to the root element if `variant="standard"` and `color="success"`. */
-  standardSuccess: string;
-  /** Styles applied to the root element if `variant="standard"` and `color="info"`. */
-  standardInfo: string;
-  /** Styles applied to the root element if `variant="standard"` and `color="warning"`. */
-  standardWarning: string;
-  /** Styles applied to the root element if `variant="standard"` and `color="error"`. */
-  standardError: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="success"`. */
-  outlinedSuccess: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="info"`. */
-  outlinedInfo: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="warning"`. */
-  outlinedWarning: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="error"`. */
-  outlinedError: string;
-  /** Styles applied to the root element if `variant="filled"` and `color="success"`. */
-  filledSuccess: string;
-  /** Styles applied to the root element if `variant="filled"` and `color="info"`. */
-  filledInfo: string;
-  /** Styles applied to the root element if `variant="filled"` and `color="warning"`. */
-  filledWarning: string;
-  /** Styles applied to the root element if `variant="filled"` and `color="error"`. */
-  filledError: string;
+  /** Styles applied to the root element if `color="success"`. */
+  colorSuccess: string;
+  /** Styles applied to the root element if `color="info"`. */
+  colorInfo: string;
+  /** Styles applied to the root element if `color="warning"`. */
+  colorWarning: string;
+  /** Styles applied to the root element if `color="error"`. */
+  colorError: string;
   /** Styles applied to the icon wrapper element. */
   icon: string;
   /** Styles applied to the message wrapper element. */
@@ -53,20 +38,12 @@ const alertClasses: AlertClasses = generateUtilityClasses('MuiAlert', [
   'icon',
   'message',
   'filled',
-  'filledSuccess',
-  'filledInfo',
-  'filledWarning',
-  'filledError',
+  'colorSuccess',
+  'colorInfo',
+  'colorWarning',
+  'colorError',
   'outlined',
-  'outlinedSuccess',
-  'outlinedInfo',
-  'outlinedWarning',
-  'outlinedError',
   'standard',
-  'standardSuccess',
-  'standardInfo',
-  'standardWarning',
-  'standardError',
 ]);
 
 export default alertClasses;

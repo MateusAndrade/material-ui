@@ -1,59 +1,57 @@
 {
   "name": "@mui/styled-engine-sc",
-  "version": "5.0.3",
-  "private": false,
+  "version": "10.0.0-alpha.0",
   "author": "MUI Team",
   "description": "styled() API wrapper package for styled-components.",
-  "main": "./src/index.js",
+  "license": "MIT",
   "keywords": [
     "react",
     "react-component",
-    "material-ui",
+    "mui",
     "styled-components"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mui-org/material-ui.git",
+    "url": "git+https://github.com/mui/material-ui.git",
     "directory": "packages/mui-styled-engine-sc"
   },
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mui-org/material-ui/issues"
+    "url": "https://github.com/mui/material-ui/issues"
   },
-  "homepage": "https://mui.com/guides/styled-engine/",
+  "homepage": "https://mui.com/material-ui/integrations/styled-components/",
   "funding": {
     "type": "opencollective",
-    "url": "https://opencollective.com/material-ui"
+    "url": "https://opencollective.com/mui-org"
   },
   "scripts": {
-    "build": "yarn build:legacy && yarn build:modern && yarn build:node && yarn build:stable && yarn build:copy-files",
-    "build:legacy": "node ../../scripts/build legacy",
-    "build:modern": "node ../../scripts/build modern",
-    "build:node": "node ../../scripts/build node",
-    "build:stable": "node ../../scripts/build stable",
-    "build:copy-files": "node ../../scripts/copy-files.js",
-    "prebuild": "rimraf build",
-    "release": "yarn build && npm publish build",
-    "test": "cd ../../ && cross-env NODE_ENV=test mocha 'packages/mui-styled-engine-sc/**/*.test.{js,ts,tsx}'",
-    "typescript": "tslint -p tsconfig.json \"{src,test}/**/*.{spec,d}.{ts,tsx}\" && tsc -p tsconfig.json"
+    "build": "code-infra build --tsgo --flat",
+    "release": "pnpm build && pnpm publish",
+    "test": "pnpm --workspace-root test:unit --project \"*:@mui/styled-engine-sc\"",
+    "typescript": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "prop-types": "^15.7.2"
+    "@babel/runtime": "^7.29.7 || ^8.0.5",
+    "@types/hoist-non-react-statics": "^3.3.7",
+    "csstype": "^3.2.3",
+    "hoist-non-react-statics": "^3.3.2",
+    "prop-types": "^15.8.1"
+  },
+  "devDependencies": {
+    "@types/prop-types": "15.7.15",
+    "@types/react": "19.3.0",
+    "react": "19.3.1",
+    "styled-components": "6.6.0"
   },
   "peerDependencies": {
-    "@types/styled-components": "^5.1.15",
-    "styled-components": "^5.3.1"
-  },
-  "peerDependenciesMeta": {
-    "@types/styled-components": {
-      "optional": true
-    }
+    "styled-components": "^6.0.0"
   },
   "sideEffects": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "build"
   },
-  "engines": {
-    "node": ">=12.0.0"
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*/index.ts"
   }
 }

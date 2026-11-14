@@ -4,9 +4,8 @@ import * as colors from './colors';
 export { colors };
 export * from './styles';
 
+// TODO remove, import directly from Base UI or create one folder per module
 export * from './utils';
-
-export * from '@mui/core';
 
 export { default as Accordion } from './Accordion';
 export * from './Accordion';
@@ -158,9 +157,6 @@ export * from './Grid';
 export { default as Grow } from './Grow';
 export * from './Grow';
 
-export { default as Hidden } from './Hidden';
-export * from './Hidden';
-
 export { default as Icon } from './Icon';
 export * from './Icon';
 
@@ -256,6 +252,9 @@ export * from './Popover';
 
 export { default as Popper } from './Popper';
 export * from './Popper';
+
+export { default as Portal } from './Portal';
+export * from './Portal';
 
 export { default as Radio } from './Radio';
 export * from './Radio';
@@ -353,6 +352,9 @@ export * from './TableHead';
 export { default as TablePagination } from './TablePagination';
 export * from './TablePagination';
 
+export { default as TablePaginationActions } from './TablePaginationActions';
+export * from './TablePaginationActions';
+
 export { default as TableRow } from './TableRow';
 export * from './TableRow';
 
@@ -404,4 +406,15 @@ export { default as useAutocomplete } from './useAutocomplete';
 export { default as GlobalStyles } from './GlobalStyles';
 export * from './GlobalStyles';
 
-export { StyledEngineProvider } from './styles';
+export { default as unstable_composeClasses } from '@mui/utils/composeClasses';
+
+export { default as generateUtilityClass } from './generateUtilityClass';
+export * from './generateUtilityClass';
+
+export { default as generateUtilityClasses } from './generateUtilityClasses';
+
+export { default as Unstable_TrapFocus } from './Unstable_TrapFocus';
+
+export * from './version';
+
+export { default as InitColorSchemeScript } from './InitColorSchemeScript';

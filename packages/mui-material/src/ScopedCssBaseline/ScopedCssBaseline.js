@@ -1,9 +1,11 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import composeClasses from '@mui/utils/composeClasses';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { html, body } from '../CssBaseline/CssBaseline';
 import { getScopedCssBaselineUtilityClass } from './scopedCssBaselineClasses';
 
@@ -20,21 +22,45 @@ const useUtilityClasses = (ownerState) => {
 const ScopedCssBaselineRoot = styled('div', {
   name: 'MuiScopedCssBaseline',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
-})(({ theme }) => ({
-  ...html,
-  ...body(theme),
-  '& *, & *::before, & *::after': {
-    boxSizing: 'inherit',
-  },
-  '& strong, & b': {
-    fontWeight: theme.typography.fontWeightBold,
-  },
-}));
+})(
+  memoTheme(({ theme }) => {
+    const colorSchemeStyles = {};
+    if (theme.colorSchemes) {
+      Object.entries(theme.colorSchemes).forEach(([key, scheme]) => {
+        const selector = theme.getColorSchemeSelector(key);
+        if (selector.startsWith('@')) {
+          colorSchemeStyles[selector] = {
+            colorScheme: scheme.palette?.mode,
+          };
+        } else {
+          colorSchemeStyles[`&${selector.replace(/\s*&/, '')}`] = {
+            colorScheme: scheme.palette?.mode,
+          };
+        }
+      });
+    }
+    return {
+      ...html(theme, false),
+      ...body(theme),
+      '& *, & *::before, & *::after': {
+        boxSizing: 'inherit',
+      },
+      '& strong, & b': {
+        fontWeight: theme.typography.fontWeightBold,
+      },
+      variants: [
+        {
+          props: { enableColorScheme: true },
+          style: theme.vars ? colorSchemeStyles : { colorScheme: theme.palette.mode },
+        },
+      ],
+    };
+  }),
+);
 
 const ScopedCssBaseline = React.forwardRef(function ScopedCssBaseline(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiScopedCssBaseline' });
-  const { className, component = 'div', ...other } = props;
+  const props = useDefaultProps({ props: inProps, name: 'MuiScopedCssBaseline' });
+  const { className, component = 'div', enableColorScheme, ...other } = props;
 
   const ownerState = {
     ...props,
@@ -55,10 +81,10 @@ const ScopedCssBaseline = React.forwardRef(function ScopedCssBaseline(inProps, r
 });
 
 ScopedCssBaseline.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -68,7 +94,7 @@ ScopedCssBaseline.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -76,6 +102,20 @@ ScopedCssBaseline.propTypes /* remove-proptypes */ = {
    * Either a string to use a HTML element or a component.
    */
   component: PropTypes.elementType,
+  /**
+   * Enable `color-scheme` CSS property to use `theme.palette.mode`.
+   * For more details, check out https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/color-scheme
+   * For browser support, check out https://caniuse.com/?search=color-scheme
+   */
+  enableColorScheme: PropTypes.bool,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default ScopedCssBaseline;

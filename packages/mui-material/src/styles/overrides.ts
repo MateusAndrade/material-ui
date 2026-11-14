@@ -1,0 +1,265 @@
+import type { CSSObject, CSSInterpolation, Interpolation } from '@mui/system';
+import type { PopperClassKey } from '../Popper';
+import type { ComponentsPropsList } from './props';
+import type { AccordionActionsClassKey } from '../AccordionActions';
+import type { AccordionClassKey } from '../Accordion';
+import type { AccordionDetailsClassKey } from '../AccordionDetails';
+import type { AccordionSummaryClassKey } from '../AccordionSummary';
+import type { AlertClassKey } from '../Alert';
+import type { AlertTitleClassKey } from '../AlertTitle';
+import type { AppBarClassKey } from '../AppBar';
+import type { AutocompleteClassKey } from '../Autocomplete';
+import type { AvatarClassKey } from '../Avatar';
+import type { AvatarGroupClassKey } from '../AvatarGroup';
+import type { BackdropClassKey } from '../Backdrop';
+import type { BadgeClassKey } from '../Badge';
+import type { BottomNavigationActionClassKey } from '../BottomNavigationAction';
+import type { BottomNavigationClassKey } from '../BottomNavigation';
+import type { BreadcrumbsClassKey } from '../Breadcrumbs';
+import type { ButtonBaseClassKey } from '../ButtonBase';
+import type { ButtonClassKey } from '../Button';
+import type { ButtonGroupClassKey } from '../ButtonGroup';
+import type { CardActionAreaClassKey } from '../CardActionArea';
+import type { CardActionsClassKey } from '../CardActions';
+import type { CardClassKey } from '../Card';
+import type { CardContentClassKey } from '../CardContent';
+import type { CardHeaderClassKey } from '../CardHeader';
+import type { CardMediaClassKey } from '../CardMedia';
+import type { CheckboxClassKey } from '../Checkbox';
+import type { ChipClassKey } from '../Chip';
+import type { CircularProgressClassKey } from '../CircularProgress';
+import type { CollapseClassKey } from '../Collapse';
+import type { ContainerClassKey } from '../Container';
+import type { DialogActionsClassKey } from '../DialogActions';
+import type { DialogClassKey } from '../Dialog';
+import type { DialogContentClassKey } from '../DialogContent';
+import type { DialogContentTextClassKey } from '../DialogContentText';
+import type { DialogTitleClassKey } from '../DialogTitle';
+import type { DividerClassKey } from '../Divider';
+import type { DrawerClassKey } from '../Drawer';
+import type { FabClassKey } from '../Fab';
+import type { FilledInputClassKey } from '../FilledInput';
+import type { FormControlClassKey } from '../FormControl';
+import type { FormControlLabelClassKey } from '../FormControlLabel';
+import type { FormGroupClassKey } from '../FormGroup';
+import type { FormHelperTextClassKey } from '../FormHelperText';
+import type { FormLabelClassKey } from '../FormLabel';
+import type { GridClassKey } from '../Grid';
+import type { IconButtonClassKey } from '../IconButton';
+import type { IconClassKey } from '../Icon';
+import type { ImageListClassKey } from '../ImageList';
+import type { ImageListItemBarClassKey } from '../ImageListItemBar';
+import type { ImageListItemClassKey } from '../ImageListItem';
+import type { InputAdornmentClassKey } from '../InputAdornment';
+import type { InputBaseClassKey } from '../InputBase';
+import type { InputClassKey } from '../Input';
+import type { InputLabelClassKey } from '../InputLabel';
+import type { LinearProgressClassKey } from '../LinearProgress';
+import type { LinkClassKey } from '../Link';
+import type { ListClassKey } from '../List';
+import type { ListItemAvatarClassKey } from '../ListItemAvatar';
+import type { ListItemClassKey } from '../ListItem';
+import type { ListItemButtonClassKey } from '../ListItemButton';
+import type { ListItemIconClassKey } from '../ListItemIcon';
+import type { ListItemSecondaryActionClassKey } from '../ListItemSecondaryAction';
+import type { ListItemTextClassKey } from '../ListItemText';
+import type { ListSubheaderClassKey } from '../ListSubheader';
+import type { MenuClassKey } from '../Menu';
+import type { MenuItemClassKey } from '../MenuItem';
+import type { MenuListClassKey } from '../MenuList';
+import type { MobileStepperClassKey } from '../MobileStepper';
+import type { ModalClassKey } from '../Modal';
+import type { NativeSelectClassKey } from '../NativeSelect';
+import type { OutlinedInputClassKey } from '../OutlinedInput';
+import type { PaginationClassKey } from '../Pagination';
+import type { PaginationItemClassKey } from '../PaginationItem';
+import type { PaperClassKey } from '../Paper';
+import type { PopoverClassKey } from '../Popover';
+import type { RadioClassKey } from '../Radio';
+import type { RadioGroupClassKey } from '../RadioGroup';
+import type { RatingClassKey } from '../Rating';
+import type { ScopedCssBaselineClassKey } from '../ScopedCssBaseline';
+import type { SelectClassKey } from '../Select';
+import type { SkeletonClassKey } from '../Skeleton';
+import type { SliderClassKey } from '../Slider';
+import type { SnackbarClassKey } from '../Snackbar';
+import type { SnackbarContentClassKey } from '../SnackbarContent';
+import type { SpeedDialClassKey } from '../SpeedDial';
+import type { SpeedDialActionClassKey } from '../SpeedDialAction';
+import type { SpeedDialIconClassKey } from '../SpeedDialIcon';
+import type { StackClassKey } from '../Stack';
+import type { StepButtonClasskey } from '../StepButton';
+import type { StepClasskey } from '../Step';
+import type { StepConnectorClasskey } from '../StepConnector';
+import type { StepContentClasskey } from '../StepContent';
+import type { StepIconClasskey } from '../StepIcon';
+import type { StepLabelClasskey } from '../StepLabel';
+import type { StepperClasskey } from '../Stepper';
+import type { SvgIconClassKey } from '../SvgIcon';
+import type { SwitchClassKey } from '../Switch';
+import type { TabClassKey } from '../Tab';
+import type { TableBodyClassKey } from '../TableBody';
+import type { TableCellClassKey } from '../TableCell';
+import type { TableClassKey } from '../Table';
+import type { TableContainerClassKey } from '../TableContainer';
+import type { TableFooterClassKey } from '../TableFooter';
+import type { TableHeadClassKey } from '../TableHead';
+import type { TablePaginationClassKey } from '../TablePagination';
+import type { TablePaginationActionsClassKey } from '../TablePaginationActions';
+import type { TableRowClassKey } from '../TableRow';
+import type { TableSortLabelClassKey } from '../TableSortLabel';
+import type { TabsClassKey } from '../Tabs';
+import type { TabScrollButtonClassKey } from '../TabScrollButton';
+import type { TextFieldClassKey } from '../TextField';
+import type { ToggleButtonClassKey } from '../ToggleButton';
+import type { ToggleButtonGroupClassKey } from '../ToggleButtonGroup';
+import type { ToolbarClassKey } from '../Toolbar';
+import type { TooltipClassKey } from '../Tooltip';
+import type { TypographyClassKey } from '../Typography';
+
+export type OverridesStyleRules<
+  ClassKey extends string = string,
+  ComponentName = keyof ComponentsPropsList,
+  Theme = unknown,
+> = Record<
+  ClassKey,
+  Interpolation<
+    // Record<string, unknown> is for other props that the slot receive internally
+    // Documenting all ownerStates could be a huge work, let's wait until we have a real needs from developers.
+    (ComponentName extends keyof ComponentsPropsList
+      ? ComponentsPropsList[ComponentName] &
+          Record<string, unknown> & {
+            ownerState: ComponentsPropsList[ComponentName] & Record<string, unknown>;
+          }
+      : {}) & {
+      theme: Theme;
+    } & Record<string, unknown>
+  >
+>;
+
+export type ComponentsOverrides<Theme = unknown> = {
+  [Name in keyof ComponentNameToClassKey]?: Partial<
+    OverridesStyleRules<ComponentNameToClassKey[Name], Name, Theme>
+  >;
+} & {
+  MuiCssBaseline?: CSSObject | string | ((theme: Theme) => CSSInterpolation) | undefined;
+};
+
+export interface ComponentNameToClassKey {
+  MuiAlert: AlertClassKey;
+  MuiAlertTitle: AlertTitleClassKey;
+  MuiAppBar: AppBarClassKey;
+  MuiAutocomplete: AutocompleteClassKey;
+  MuiAvatar: AvatarClassKey;
+  MuiAvatarGroup: AvatarGroupClassKey;
+  MuiBackdrop: BackdropClassKey;
+  MuiBadge: BadgeClassKey;
+  MuiBottomNavigation: BottomNavigationClassKey;
+  MuiBottomNavigationAction: BottomNavigationActionClassKey;
+  MuiBreadcrumbs: BreadcrumbsClassKey;
+  MuiButton: ButtonClassKey;
+  MuiButtonBase: ButtonBaseClassKey;
+  MuiButtonGroup: ButtonGroupClassKey;
+  MuiCard: CardClassKey;
+  MuiCardActionArea: CardActionAreaClassKey;
+  MuiCardActions: CardActionsClassKey;
+  MuiCardContent: CardContentClassKey;
+  MuiCardHeader: CardHeaderClassKey;
+  MuiCardMedia: CardMediaClassKey;
+  MuiCheckbox: CheckboxClassKey;
+  MuiChip: ChipClassKey;
+  MuiCircularProgress: CircularProgressClassKey;
+  MuiCollapse: CollapseClassKey;
+  MuiContainer: ContainerClassKey;
+  MuiDialog: DialogClassKey;
+  MuiDialogActions: DialogActionsClassKey;
+  MuiDialogContent: DialogContentClassKey;
+  MuiDialogContentText: DialogContentTextClassKey;
+  MuiDialogTitle: DialogTitleClassKey;
+  MuiDivider: DividerClassKey;
+  MuiDrawer: DrawerClassKey;
+  MuiAccordion: AccordionClassKey;
+  MuiAccordionActions: AccordionActionsClassKey;
+  MuiAccordionDetails: AccordionDetailsClassKey;
+  MuiAccordionSummary: AccordionSummaryClassKey;
+  MuiFab: FabClassKey;
+  MuiFilledInput: FilledInputClassKey;
+  MuiFormControl: FormControlClassKey;
+  MuiFormControlLabel: FormControlLabelClassKey;
+  MuiFormGroup: FormGroupClassKey;
+  MuiFormHelperText: FormHelperTextClassKey;
+  MuiFormLabel: FormLabelClassKey;
+  MuiGrid: GridClassKey;
+  MuiIcon: IconClassKey;
+  MuiIconButton: IconButtonClassKey;
+  MuiImageList: ImageListClassKey;
+  MuiImageListItem: ImageListItemClassKey;
+  MuiImageListItemBar: ImageListItemBarClassKey;
+  MuiInput: InputClassKey;
+  MuiInputAdornment: InputAdornmentClassKey;
+  MuiInputBase: InputBaseClassKey;
+  MuiInputLabel: InputLabelClassKey;
+  MuiLinearProgress: LinearProgressClassKey;
+  MuiLink: LinkClassKey;
+  MuiList: ListClassKey;
+  MuiListItem: ListItemClassKey;
+  MuiListItemButton: ListItemButtonClassKey;
+  MuiListItemAvatar: ListItemAvatarClassKey;
+  MuiListItemIcon: ListItemIconClassKey;
+  MuiListItemSecondaryAction: ListItemSecondaryActionClassKey;
+  MuiListItemText: ListItemTextClassKey;
+  MuiListSubheader: ListSubheaderClassKey;
+  MuiMenu: MenuClassKey;
+  MuiMenuItem: MenuItemClassKey;
+  MuiMenuList: MenuListClassKey;
+  MuiMobileStepper: MobileStepperClassKey;
+  MuiModal: ModalClassKey;
+  MuiNativeSelect: NativeSelectClassKey;
+  MuiOutlinedInput: OutlinedInputClassKey;
+  MuiPagination: PaginationClassKey;
+  MuiPaginationItem: PaginationItemClassKey;
+  MuiPaper: PaperClassKey;
+  MuiPopover: PopoverClassKey;
+  MuiPopper: PopperClassKey;
+  MuiRadio: RadioClassKey;
+  MuiRadioGroup: RadioGroupClassKey;
+  MuiRating: RatingClassKey;
+  MuiScopedCssBaseline: ScopedCssBaselineClassKey;
+  MuiSelect: SelectClassKey;
+  MuiSkeleton: SkeletonClassKey;
+  MuiSlider: SliderClassKey;
+  MuiSnackbar: SnackbarClassKey;
+  MuiSnackbarContent: SnackbarContentClassKey;
+  MuiSpeedDial: SpeedDialClassKey;
+  MuiSpeedDialAction: SpeedDialActionClassKey;
+  MuiSpeedDialIcon: SpeedDialIconClassKey;
+  MuiStack: StackClassKey;
+  MuiStep: StepClasskey;
+  MuiStepButton: StepButtonClasskey;
+  MuiStepConnector: StepConnectorClasskey;
+  MuiStepContent: StepContentClasskey;
+  MuiStepIcon: StepIconClasskey;
+  MuiStepLabel: StepLabelClasskey;
+  MuiStepper: StepperClasskey;
+  MuiSvgIcon: SvgIconClassKey;
+  MuiSwitch: SwitchClassKey;
+  MuiTab: TabClassKey;
+  MuiTable: TableClassKey;
+  MuiTableBody: TableBodyClassKey;
+  MuiTableCell: TableCellClassKey;
+  MuiTableContainer: TableContainerClassKey;
+  MuiTableFooter: TableFooterClassKey;
+  MuiTableHead: TableHeadClassKey;
+  MuiTablePagination: TablePaginationClassKey;
+  MuiTablePaginationActions: TablePaginationActionsClassKey;
+  MuiTableRow: TableRowClassKey;
+  MuiTableSortLabel: TableSortLabelClassKey;
+  MuiTabs: TabsClassKey;
+  MuiTabScrollButton: TabScrollButtonClassKey;
+  MuiTextField: TextFieldClassKey;
+  MuiToggleButton: ToggleButtonClassKey;
+  MuiToggleButtonGroup: ToggleButtonGroupClassKey;
+  MuiToolbar: ToolbarClassKey;
+  MuiTooltip: TooltipClassKey;
+  MuiTypography: TypographyClassKey;
+}

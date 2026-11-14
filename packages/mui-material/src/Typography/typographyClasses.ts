@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface TypographyClasses {
   /** Styles applied to the root element. */
@@ -43,8 +44,6 @@ export interface TypographyClasses {
   noWrap: string;
   /** Styles applied to the root element if `gutterBottom={true}`. */
   gutterBottom: string;
-  /** Styles applied to the root element if `paragraph={true}`. */
-  paragraph: string;
 }
 
 export type TypographyClassKey = keyof TypographyClasses;
@@ -75,7 +74,6 @@ const typographyClasses: TypographyClasses = generateUtilityClasses('MuiTypograp
   'alignJustify',
   'noWrap',
   'gutterBottom',
-  'paragraph',
 ]);
 
 export default typographyClasses;

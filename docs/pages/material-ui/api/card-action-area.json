@@ -1,0 +1,61 @@
+{
+  "props": {
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "slotProps": {
+      "type": {
+        "name": "shape",
+        "description": "{ focusHighlight?: func<br>&#124;&nbsp;object, root?: func<br>&#124;&nbsp;object }"
+      },
+      "default": "{}"
+    },
+    "slots": {
+      "type": {
+        "name": "shape",
+        "description": "{ focusHighlight?: elementType, root?: elementType }"
+      },
+      "default": "{}"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
+  "name": "CardActionArea",
+  "imports": [
+    "import CardActionArea from '@mui/material/CardActionArea';",
+    "import { CardActionArea } from '@mui/material';"
+  ],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "default": "ButtonBase",
+      "class": "MuiCardActionArea-root"
+    },
+    {
+      "name": "focusHighlight",
+      "description": "The component that renders the focusHighlight.",
+      "default": "'span'",
+      "class": "MuiCardActionArea-focusHighlight"
+    }
+  ],
+  "classes": [
+    {
+      "key": "focusVisible",
+      "className": "Mui-focusVisible",
+      "description": "State class applied to the ButtonBase root element if the action area is keyboard focused.",
+      "isGlobal": true
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": true,
+  "muiName": "MuiCardActionArea",
+  "forwardsRefTo": "HTMLButtonElement",
+  "filename": "/packages/mui-material/src/CardActionArea/CardActionArea.js",
+  "inheritance": { "component": "ButtonBase", "pathname": "/material-ui/api/button-base/" },
+  "demos": "<ul><li><a href=\"/material-ui/react-card/\">Card</a></li></ul>"
+}

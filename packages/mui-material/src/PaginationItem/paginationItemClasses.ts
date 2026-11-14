@@ -1,4 +1,5 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface PaginationItemClasses {
   /** Styles applied to the root element. */
@@ -11,23 +12,15 @@ export interface PaginationItemClasses {
   sizeLarge: string;
   /** Styles applied to the root element if `variant="text"`. */
   text: string;
-  /** Styles applied to the root element if `variant="text"` and `color="primary"`. */
-  textPrimary: string;
-  /** Styles applied to the root element if `variant="text"` and `color="secondary"`. */
-  textSecondary: string;
   /** Styles applied to the root element if `variant="outlined"`. */
   outlined: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="primary"`. */
-  outlinedPrimary: string;
-  /** Styles applied to the root element if `variant="outlined"` and `color="secondary"`. */
-  outlinedSecondary: string;
   /** Styles applied to the root element if `rounded="true"`. */
   rounded: string;
   /** Styles applied to the root element if `type="start-ellipsis"` or `type="end-ellipsis"`. */
   ellipsis: string;
-  /** Styles applyed to the root element if `type="first"` or type="last". */
+  /** Styles applied to the root element if `type="first"` or type="last". */
   firstLast: string;
-  /** Styles applyed to the root element if `type="previous"` or type="next". */
+  /** Styles applied to the root element if `type="previous"` or type="next". */
   previousNext: string;
   /** State class applied to the root element if keyboard focused. */
   focusVisible: string;
@@ -37,6 +30,10 @@ export interface PaginationItemClasses {
   selected: string;
   /** Styles applied to the icon to display. */
   icon: string;
+  /** Styles applied to the root element if `color="primary"`. */
+  colorPrimary: string;
+  /** Styles applied to the root element if `color="secondary"`. */
+  colorSecondary: string;
 }
 
 export type PaginationItemClassKey = keyof PaginationItemClasses;
@@ -51,11 +48,7 @@ const paginationItemClasses: PaginationItemClasses = generateUtilityClasses('Mui
   'sizeSmall',
   'sizeLarge',
   'text',
-  'textPrimary',
-  'textSecondary',
   'outlined',
-  'outlinedPrimary',
-  'outlinedSecondary',
   'rounded',
   'ellipsis',
   'firstLast',
@@ -64,6 +57,8 @@ const paginationItemClasses: PaginationItemClasses = generateUtilityClasses('Mui
   'disabled',
   'selected',
   'icon',
+  'colorPrimary',
+  'colorSecondary',
 ]);
 
 export default paginationItemClasses;

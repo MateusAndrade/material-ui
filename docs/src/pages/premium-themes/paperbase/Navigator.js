@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -90,7 +89,6 @@ export default function Navigator(props) {
                 </ListItemButton>
               </ListItem>
             ))}
-
             <Divider sx={{ mt: 2 }} />
           </Box>
         ))}

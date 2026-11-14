@@ -1,20 +1,21 @@
-const playwright = require('playwright');
+const { chromium } = require('@playwright/test');
 
 /**
  * @param {number} timeoutMS
  * @returns {Promise<void>}
  */
-function sleep(timeoutMS) {
+function sleep(duration) {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(), timeoutMS);
+    setTimeout(() => {
+      resolve();
+    }, duration);
   });
 }
-
 /**
  * Attempts page.goto with retries
  *
  * @remarks The server and runner can be started up simultaneously
- * @param {import('playwright').PAge} page
+ * @param {import('@playwright/test').Page} page
  * @param {string} url
  * @returns {boolean}
  */
@@ -38,7 +39,7 @@ async function attemptGoto(page, url) {
 }
 
 async function main() {
-  const browser = await playwright.chromium.launch();
+  const browser = await chromium.launch();
   const page = await browser.newPage();
 
   page.on('console', (consoleMessage) => {
@@ -46,7 +47,7 @@ async function main() {
       `Expected no console messages but got ${consoleMessage.type()}: '${consoleMessage.text()}' `,
     );
   });
-  await attemptGoto(page, 'http://localhost:5000/');
+  await attemptGoto(page, 'http://localhost:5001/');
 
   await browser.close();
 }

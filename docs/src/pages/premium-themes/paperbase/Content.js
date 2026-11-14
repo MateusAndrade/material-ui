@@ -1,4 +1,3 @@
-import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -21,22 +20,24 @@ export default function Content() {
         sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}
       >
         <Toolbar>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item>
+          <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+            <Grid>
               <SearchIcon color="inherit" sx={{ display: 'block' }} />
             </Grid>
-            <Grid item xs>
+            <Grid size="grow">
               <TextField
                 fullWidth
                 placeholder="Search by email address, phone number, or user UID"
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { fontSize: 'default' },
+                slotProps={{
+                  input: {
+                    disableUnderline: true,
+                    sx: { fontSize: 'default' },
+                  },
                 }}
                 variant="standard"
               />
             </Grid>
-            <Grid item>
+            <Grid>
               <Button variant="contained" sx={{ mr: 1 }}>
                 Add user
               </Button>
@@ -49,7 +50,7 @@ export default function Content() {
           </Grid>
         </Toolbar>
       </AppBar>
-      <Typography sx={{ my: 5, mx: 2 }} color="text.secondary" align="center">
+      <Typography align="center" sx={{ color: 'text.secondary', my: 5, mx: 2 }}>
         No users for this project yet
       </Typography>
     </Paper>

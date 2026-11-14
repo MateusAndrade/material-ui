@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance, screen } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen, isJsdom } from '@mui/internal-test-utils';
 import AppBar, { appBarClasses as classes } from '@mui/material/AppBar';
 import Paper from '@mui/material/Paper';
+import { ThemeProvider, CssVarsProvider, hexToRgb } from '@mui/material/styles';
+import defaultTheme from '../styles/defaultTheme';
+import describeConformance from '../../test/describeConformance';
 
 describe('<AppBar />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<AppBar>Conformance?</AppBar>, () => ({
     classes,
@@ -15,7 +17,6 @@ describe('<AppBar />', () => {
     refInstanceof: window.HTMLElement,
     testVariantProps: { position: 'relative' },
     testStateOverrides: { prop: 'color', value: 'secondary', styleKey: 'colorSecondary' },
-    skip: ['componentsProp'],
   }));
 
   it('should render with the root class and primary', () => {
@@ -61,4 +62,37 @@ describe('<AppBar />', () => {
       expect(appBar).to.have.class('mui-fixed');
     });
   });
+
+  it.skipIf(isJsdom())('should inherit Paper background color with ThemeProvider', function test() {
+    render(
+      <ThemeProvider theme={defaultTheme}>
+        <AppBar data-testid="root" color="inherit">
+          Hello World
+        </AppBar>
+      </ThemeProvider>,
+    );
+
+    const appBar = screen.getByTestId('root');
+    expect(appBar).toHaveComputedStyle({
+      backgroundColor: hexToRgb(defaultTheme.palette.background.paper),
+    });
+  });
+
+  it.skipIf(isJsdom())(
+    'should inherit Paper background color with CssVarsProvider',
+    function test() {
+      render(
+        <CssVarsProvider>
+          <AppBar data-testid="root" color="inherit">
+            Hello World
+          </AppBar>
+        </CssVarsProvider>,
+      );
+
+      const appBar = screen.getByTestId('root');
+      expect(appBar).toHaveComputedStyle({
+        backgroundColor: hexToRgb(defaultTheme.palette.background.paper),
+      });
+    },
+  );
 });

@@ -1,10 +1,11 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
+import composeClasses from '@mui/utils/composeClasses';
 import Tablelvl2Context from '../Table/Tablelvl2Context';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import { getTableHeadUtilityClass } from './tableHeadClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -20,7 +21,6 @@ const useUtilityClasses = (ownerState) => {
 const TableHeadRoot = styled('thead', {
   name: 'MuiTableHead',
   slot: 'Root',
-  overridesResolver: (props, styles) => styles.root,
 })({
   display: 'table-header-group',
 });
@@ -32,7 +32,7 @@ const tablelvl2 = {
 const defaultComponent = 'thead';
 
 const TableHead = React.forwardRef(function TableHead(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiTableHead' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiTableHead' });
   const { className, component = defaultComponent, ...other } = props;
 
   const ownerState = {
@@ -57,10 +57,10 @@ const TableHead = React.forwardRef(function TableHead(inProps, ref) {
 });
 
 TableHead.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component, normally `TableRow`.
    */
@@ -70,7 +70,7 @@ TableHead.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -81,7 +81,11 @@ TableHead.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 };
 
 export default TableHead;

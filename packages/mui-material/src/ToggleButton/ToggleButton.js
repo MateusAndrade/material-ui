@@ -1,14 +1,21 @@
+'use client';
 // @inheritedComponent ButtonBase
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { alpha } from '../styles';
+import resolveProps from '@mui/utils/resolveProps';
+import composeClasses from '@mui/utils/composeClasses';
 import ButtonBase from '../ButtonBase';
 import capitalize from '../utils/capitalize';
-import useThemeProps from '../styles/useThemeProps';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import createSimplePaletteValueFilter from '../utils/createSimplePaletteValueFilter';
+import { useDefaultProps } from '../DefaultPropsProvider';
 import toggleButtonClasses, { getToggleButtonUtilityClass } from './toggleButtonClasses';
+import ToggleButtonGroupContext from '../ToggleButtonGroup/ToggleButtonGroupContext';
+import ToggleButtonGroupButtonContext from '../ToggleButtonGroup/ToggleButtonGroupButtonContext';
+import isValueSelected from '../ToggleButtonGroup/isValueSelected';
+import RovingToggleButton from './RovingToggleButton';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, fullWidth, selected, disabled, size, color } = ownerState;
@@ -35,59 +42,120 @@ const ToggleButtonRoot = styled(ButtonBase, {
 
     return [styles.root, styles[`size${capitalize(ownerState.size)}`]];
   },
-})(({ theme, ownerState }) => {
-  const selectedColor =
-    ownerState.color === 'standard'
-      ? theme.palette.text.primary
-      : theme.palette[ownerState.color].main;
-  return {
+})(
+  memoTheme(({ theme }) => ({
     ...theme.typography.button,
-    borderRadius: theme.shape.borderRadius,
+    borderRadius: (theme.vars || theme).shape.borderRadius,
     padding: 11,
-    border: `1px solid ${theme.palette.divider}`,
-    color: theme.palette.action.active,
-    ...(ownerState.fullWidth && {
-      width: '100%',
-    }),
+    border: `1px solid ${(theme.vars || theme).palette.divider}`,
+    color: (theme.vars || theme).palette.action.active,
     [`&.${toggleButtonClasses.disabled}`]: {
-      color: theme.palette.action.disabled,
-      border: `1px solid ${theme.palette.action.disabledBackground}`,
+      color: (theme.vars || theme).palette.action.disabled,
+      border: `1px solid ${(theme.vars || theme).palette.action.disabledBackground}`,
     },
     '&:hover': {
       textDecoration: 'none',
       // Reset on mouse devices
-      backgroundColor: alpha(theme.palette.text.primary, theme.palette.action.hoverOpacity),
+      backgroundColor: theme.alpha(
+        (theme.vars || theme).palette.text.primary,
+        (theme.vars || theme).palette.action.hoverOpacity,
+      ),
       '@media (hover: none)': {
         backgroundColor: 'transparent',
       },
     },
-    [`&.${toggleButtonClasses.selected}`]: {
-      color: selectedColor,
-      backgroundColor: alpha(selectedColor, theme.palette.action.selectedOpacity),
-      '&:hover': {
-        backgroundColor: alpha(
-          selectedColor,
-          theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity,
-        ),
-        // Reset on touch devices, it doesn't add specificity
-        '@media (hover: none)': {
-          backgroundColor: alpha(selectedColor, theme.palette.action.selectedOpacity),
+    variants: [
+      {
+        props: { color: 'standard' },
+        style: {
+          [`&.${toggleButtonClasses.selected}`]: {
+            color: (theme.vars || theme).palette.text.primary,
+            backgroundColor: theme.alpha(
+              (theme.vars || theme).palette.text.primary,
+              (theme.vars || theme).palette.action.selectedOpacity,
+            ),
+            '&:hover': {
+              backgroundColor: theme.alpha(
+                (theme.vars || theme).palette.text.primary,
+                `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`,
+              ),
+              // Reset on touch devices, it doesn't add specificity
+              '@media (hover: none)': {
+                backgroundColor: theme.alpha(
+                  (theme.vars || theme).palette.text.primary,
+                  (theme.vars || theme).palette.action.selectedOpacity,
+                ),
+              },
+            },
+          },
         },
       },
-    },
-    ...(ownerState.size === 'small' && {
-      padding: 7,
-      fontSize: theme.typography.pxToRem(13),
-    }),
-    ...(ownerState.size === 'large' && {
-      padding: 15,
-      fontSize: theme.typography.pxToRem(15),
-    }),
-  };
-});
+      ...Object.entries(theme.palette)
+        .filter(createSimplePaletteValueFilter())
+        .map(([color]) => ({
+          props: { color },
+          style: {
+            [`&.${toggleButtonClasses.selected}`]: {
+              color: (theme.vars || theme).palette[color].main,
+              backgroundColor: theme.alpha(
+                (theme.vars || theme).palette[color].main,
+                (theme.vars || theme).palette.action.selectedOpacity,
+              ),
+              '&:hover': {
+                backgroundColor: theme.alpha(
+                  (theme.vars || theme).palette[color].main,
+                  `${(theme.vars || theme).palette.action.selectedOpacity} + ${(theme.vars || theme).palette.action.hoverOpacity}`,
+                ),
+                // Reset on touch devices, it doesn't add specificity
+                '@media (hover: none)': {
+                  backgroundColor: theme.alpha(
+                    (theme.vars || theme).palette[color].main,
+                    (theme.vars || theme).palette.action.selectedOpacity,
+                  ),
+                },
+              },
+            },
+          },
+        })),
+      {
+        props: { fullWidth: true },
+        style: {
+          width: '100%',
+        },
+      },
+      {
+        props: { size: 'small' },
+        style: {
+          padding: 7,
+          fontSize: theme.typography.pxToRem(13),
+        },
+      },
+      {
+        props: { size: 'large' },
+        style: {
+          padding: 15,
+          fontSize: theme.typography.pxToRem(15),
+        },
+      },
+    ],
+  })),
+);
 
 const ToggleButton = React.forwardRef(function ToggleButton(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiToggleButton' });
+  // props priority: `inProps` > `contextProps` > `themeDefaultProps`
+  const {
+    value: contextValue,
+    isRovingTabIndex,
+    ...contextProps
+  } = React.useContext(ToggleButtonGroupContext);
+  const toggleButtonGroupButtonContextPositionClassName = React.useContext(
+    ToggleButtonGroupButtonContext,
+  );
+  const resolvedProps = resolveProps(
+    { ...contextProps, selected: isValueSelected(inProps.value, contextValue) },
+    inProps,
+  );
+  const props = useDefaultProps({ props: resolvedProps, name: 'MuiToggleButton' });
   const {
     children,
     className,
@@ -127,12 +195,14 @@ const ToggleButton = React.forwardRef(function ToggleButton(inProps, ref) {
     }
   };
 
-  return (
+  const positionClassName = toggleButtonGroupButtonContextPositionClassName || '';
+  const button = (
     <ToggleButtonRoot
-      className={clsx(classes.root, className)}
+      className={clsx(contextProps.className, classes.root, className, positionClassName)}
+      internalNativeButton
       disabled={disabled}
       focusRipple={!disableFocusRipple}
-      ref={ref}
+      ref={isRovingTabIndex ? undefined : ref}
       onClick={handleChange}
       onChange={onChange}
       value={value}
@@ -143,13 +213,23 @@ const ToggleButton = React.forwardRef(function ToggleButton(inProps, ref) {
       {children}
     </ToggleButtonRoot>
   );
+
+  if (isRovingTabIndex) {
+    return (
+      <RovingToggleButton disabled={disabled} selected={selected} ref={ref} value={value}>
+        {button}
+      </RovingToggleButton>
+    );
+  }
+
+  return button;
 });
 
 ToggleButton.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The content of the component.
    */
@@ -159,11 +239,13 @@ ToggleButton.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
    * The color of the button when it is in an active state.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
    * @default 'standard'
    */
   color: PropTypes /* @typescript-to-proptypes-ignore */.oneOfType([
@@ -194,11 +276,17 @@ ToggleButton.propTypes /* remove-proptypes */ = {
    */
   fullWidth: PropTypes.bool,
   /**
-   * @ignore
+   * Callback fired when the state changes.
+   *
+   * @param {React.MouseEvent<HTMLElement>} event The event source of the callback.
+   * @param {any} value of the selected button.
    */
   onChange: PropTypes.func,
   /**
-   * @ignore
+   * Callback fired when the button is clicked.
+   *
+   * @param {React.MouseEvent<HTMLElement>} event The event source of the callback.
+   * @param {any} value of the selected button.
    */
   onClick: PropTypes.func,
   /**
@@ -217,12 +305,16 @@ ToggleButton.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The value to associate with the button when selected in a
    * ToggleButtonGroup.
    */
-  value: PropTypes.any.isRequired,
+  value: PropTypes /* @typescript-to-proptypes-ignore */.any.isRequired,
 };
 
 export default ToggleButton;

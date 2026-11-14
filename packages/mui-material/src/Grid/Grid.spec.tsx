@@ -1,7 +1,13 @@
-import * as React from 'react';
-import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 
-function ResponsiveTest() {
-  <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square />;
-}
+// Responsive props accept readonly arrays
+<Grid
+  container
+  columns={[4, null, 12] as const}
+  spacing={[1, null, '2rem'] as const}
+  rowSpacing={[1, 2] as const}
+  columnSpacing={[1, 2] as const}
+  direction={['row', 'row-reverse'] as const}
+  size={[6, null, 'grow'] as const}
+  offset={[0, 'auto'] as const}
+/>;

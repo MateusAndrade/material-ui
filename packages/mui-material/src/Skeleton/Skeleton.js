@@ -1,11 +1,13 @@
+'use client';
 import * as React from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
-import { keyframes, css } from '@mui/system';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { alpha, unstable_getUnit as getUnit, unstable_toUnitless as toUnitless } from '../styles';
-import styled from '../styles/styled';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import { unstable_getUnit as getUnit, unstable_toUnitless as toUnitless } from '../styles';
+import { keyframes, css, styled } from '../zero-styled';
+import memoTheme from '../utils/memoTheme';
+import { useDefaultProps } from '../DefaultPropsProvider';
+import { getReducedMotionStyles } from '../transitions/utils';
 import { getSkeletonUtilityClass } from './skeletonClasses';
 
 const useUtilityClasses = (ownerState) => {
@@ -54,6 +56,25 @@ const waveKeyframe = keyframes`
   }
 `;
 
+// This implementation is for supporting both Styled-components v4+ and Pigment CSS.
+// A global animation has to be created here for Styled-components v4+ (https://github.com/styled-components/styled-components/blob/main/packages/styled-components/src/utils/errors.md#12).
+// which can be done by checking typeof indeterminate1Keyframe !== 'string' (at runtime, Pigment CSS transform keyframes`` to a string).
+const pulseAnimation =
+  typeof pulseKeyframe !== 'string'
+    ? css`
+        animation: ${pulseKeyframe} 2s ease-in-out 0.5s infinite;
+      `
+    : null;
+
+const waveAnimation =
+  typeof waveKeyframe !== 'string'
+    ? css`
+        &::after {
+          animation: ${waveKeyframe} 2s linear 0.5s infinite;
+        }
+      `
+    : null;
+
 const SkeletonRoot = styled('span', {
   name: 'MuiSkeleton',
   slot: 'Root',
@@ -70,79 +91,150 @@ const SkeletonRoot = styled('span', {
     ];
   },
 })(
-  ({ theme, ownerState }) => {
+  memoTheme(({ theme }) => {
     const radiusUnit = getUnit(theme.shape.borderRadius) || 'px';
     const radiusValue = toUnitless(theme.shape.borderRadius);
+    const reducedMotionPulseStyles = getReducedMotionStyles(theme, { animation: 'none' });
+    const reducedMotionWaveStyles = getReducedMotionStyles(theme, {
+      '&::after': {
+        animation: 'none',
+        display: 'none',
+      },
+    });
 
     return {
       display: 'block',
       // Create a "on paper" color with sufficient contrast retaining the color
-      backgroundColor: alpha(
-        theme.palette.text.primary,
-        theme.palette.mode === 'light' ? 0.11 : 0.13,
-      ),
+      backgroundColor: theme.vars
+        ? theme.vars.palette.Skeleton.bg
+        : theme.alpha(theme.palette.text.primary, theme.palette.mode === 'light' ? 0.11 : 0.13),
       height: '1.2em',
-      ...(ownerState.variant === 'text' && {
-        marginTop: 0,
-        marginBottom: 0,
-        height: 'auto',
-        transformOrigin: '0 55%',
-        transform: 'scale(1, 0.60)',
-        borderRadius: `${radiusValue}${radiusUnit}/${
-          Math.round((radiusValue / 0.6) * 10) / 10
-        }${radiusUnit}`,
-        '&:empty:before': {
-          content: '"\\00a0"',
+      variants: [
+        {
+          props: {
+            variant: 'text',
+          },
+          style: {
+            marginTop: 0,
+            marginBottom: 0,
+            height: 'auto',
+            transformOrigin: '0 55%',
+            transform: 'scale(1, 0.60)',
+            borderRadius: `${radiusValue}${radiusUnit}/${Math.round((radiusValue / 0.6) * 10) / 10}${
+              radiusUnit
+            }`,
+            '&:empty:before': {
+              content: '"\\00a0"',
+            },
+          },
         },
-      }),
-      ...(ownerState.variant === 'circular' && {
-        borderRadius: '50%',
-      }),
-      ...(ownerState.hasChildren && {
-        '& > *': {
-          visibility: 'hidden',
+        {
+          props: {
+            variant: 'circular',
+          },
+          style: {
+            borderRadius: '50%',
+          },
         },
-      }),
-      ...(ownerState.hasChildren &&
-        !ownerState.width && {
-          maxWidth: 'fit-content',
-        }),
-      ...(ownerState.hasChildren &&
-        !ownerState.height && {
-          height: 'auto',
-        }),
+        {
+          props: {
+            variant: 'rounded',
+          },
+          style: {
+            borderRadius: (theme.vars || theme).shape.borderRadius,
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.hasChildren,
+          style: {
+            '& > *': {
+              visibility: 'hidden',
+            },
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.hasChildren && !ownerState.width,
+          style: {
+            maxWidth: 'fit-content',
+          },
+        },
+        {
+          props: ({ ownerState }) => ownerState.hasChildren && !ownerState.height,
+          style: {
+            height: 'auto',
+          },
+        },
+        {
+          props: {
+            animation: 'pulse',
+          },
+          style: pulseAnimation || {
+            animation: `${pulseKeyframe} 2s ease-in-out 0.5s infinite`,
+          },
+        },
+        ...(reducedMotionPulseStyles
+          ? [
+              {
+                props: {
+                  animation: 'pulse',
+                },
+                style: reducedMotionPulseStyles,
+              },
+            ]
+          : []),
+        {
+          props: {
+            animation: 'wave',
+          },
+          style: {
+            position: 'relative',
+            overflow: 'hidden',
+            /* Fix bug in Safari https://bugs.webkit.org/show_bug.cgi?id=68196 */
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            '&::after': {
+              background: `linear-gradient(
+                90deg,
+                transparent,
+                ${(theme.vars || theme).palette.action.hover},
+                transparent
+              )`,
+              content: '""',
+              position: 'absolute',
+              transform: 'translateX(-100%)' /* Avoid flash during server-side hydration */,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              top: 0,
+            },
+          },
+        },
+        {
+          props: {
+            animation: 'wave',
+          },
+          style: waveAnimation || {
+            '&::after': {
+              animation: `${waveKeyframe} 2s linear 0.5s infinite`,
+            },
+          },
+        },
+        ...(reducedMotionWaveStyles
+          ? [
+              {
+                props: {
+                  animation: 'wave',
+                },
+                style: reducedMotionWaveStyles,
+              },
+            ]
+          : []),
+      ],
     };
-  },
-  ({ ownerState }) =>
-    ownerState.animation === 'pulse' &&
-    css`
-      animation: ${pulseKeyframe} 1.5s ease-in-out 0.5s infinite;
-    `,
-  ({ ownerState, theme }) =>
-    ownerState.animation === 'wave' &&
-    css`
-      position: relative;
-      overflow: hidden;
-
-      /* Fix bug in Safari https://bugs.webkit.org/show_bug.cgi?id=68196 */
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-
-      &::after {
-        animation: ${waveKeyframe} 1.6s linear 0.5s infinite;
-        background: linear-gradient(90deg, transparent, ${theme.palette.action.hover}, transparent);
-        content: '';
-        position: absolute;
-        transform: translateX(-100%); /* Avoid flash during server-side hydration */
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: 0;
-      }
-    `,
+  }),
 );
 
 const Skeleton = React.forwardRef(function Skeleton(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiSkeleton' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiSkeleton' });
   const {
     animation = 'pulse',
     className,
@@ -181,10 +273,10 @@ const Skeleton = React.forwardRef(function Skeleton(inProps, ref) {
 });
 
 Skeleton.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * The animation.
    * If `false` the animation effect is disabled.
@@ -200,7 +292,7 @@ Skeleton.propTypes /* remove-proptypes */ = {
    */
   classes: PropTypes.object,
   /**
-   * @ignore
+   * A CSS class name applied to the root element.
    */
   className: PropTypes.string,
   /**
@@ -213,20 +305,21 @@ Skeleton.propTypes /* remove-proptypes */ = {
    * Useful when you don't want to adapt the skeleton to a text element but for instance a card.
    */
   height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  /**
-   * @ignore
-   */
   style: PropTypes.object,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The type of content that will be rendered.
    * @default 'text'
    */
   variant: PropTypes /* @typescript-to-proptypes-ignore */.oneOfType([
-    PropTypes.oneOf(['circular', 'rectangular', 'text']),
+    PropTypes.oneOf(['circular', 'rectangular', 'rounded', 'text']),
     PropTypes.string,
   ]),
   /**

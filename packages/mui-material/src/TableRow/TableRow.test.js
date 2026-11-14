@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { expect } from 'chai';
-import { createClientRender, describeConformance } from 'test/utils';
+import { describe, it, expect } from 'vitest';
+import { createRenderer, screen } from '@mui/internal-test-utils';
 import TableRow, { tableRowClasses as classes } from '@mui/material/TableRow';
+import describeConformance from '../../test/describeConformance';
 
 describe('<TableRow />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   function renderInTable(node) {
     return render(
@@ -25,25 +25,16 @@ describe('<TableRow />', () => {
       );
       return { container: container.firstChild.firstChild, ...other };
     },
-    wrapMount: (mount) => (node) => {
-      const wrapper = mount(
-        <table>
-          <tbody>{node}</tbody>
-        </table>,
-      );
-      return wrapper.find('tbody').childAt(0);
-    },
     muiName: 'MuiTableRow',
     testVariantProps: { variant: 'foo' },
     refInstanceof: window.HTMLTableRowElement,
     testComponentPropWith: 'tr',
-    skip: ['componentsProp'],
   }));
 
   it('should render children', () => {
     const children = <td data-testid="test" />;
-    const { getByTestId } = renderInTable(<TableRow>{children}</TableRow>);
-    getByTestId('test');
+    renderInTable(<TableRow>{children}</TableRow>);
+    screen.getByTestId('test');
   });
 
   describe('prop: component', () => {

@@ -1,11 +1,11 @@
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 import { createTheme } from '@mui/material/styles';
 import createTransitions, { easing, duration } from './createTransitions';
 
 describe('createTransitions', () => {
-  const transitons = createTransitions({});
-  const create = transitons.create;
-  const getAutoHeightDuration = transitons.getAutoHeightDuration;
+  const transitions = createTransitions({});
+  const create = transitions.create;
+  const getAutoHeightDuration = transitions.getAutoHeightDuration;
 
   it('should allow to customize the default duration', () => {
     const theme = createTheme({
@@ -16,6 +16,16 @@ describe('createTransitions', () => {
       },
     });
     expect(theme.transitions.create('color')).to.equal(`color 432ms ${easing.easeInOut} 0ms`);
+  });
+
+  it('should not expose reducedMotion on transitions', () => {
+    const theme = createTheme({
+      transitions: {
+        reducedMotion: 'system',
+      },
+    });
+
+    expect(theme.transitions).not.to.have.property('reducedMotion');
   });
 
   describe('create() function', () => {
@@ -130,14 +140,11 @@ describe('createTransitions', () => {
 
     it('should return NaN when passed a negative number', () => {
       const zeroHeightDurationNegativeOne = getAutoHeightDuration(-1);
-      // eslint-disable-next-line no-restricted-globals
-      expect(isNaN(zeroHeightDurationNegativeOne)).to.equal(true);
+      expect(Number.isNaN(zeroHeightDurationNegativeOne)).to.equal(true);
       const zeroHeightDurationSmallNegative = getAutoHeightDuration(-0.000001);
-      // eslint-disable-next-line no-restricted-globals
-      expect(isNaN(zeroHeightDurationSmallNegative)).to.equal(true);
+      expect(Number.isNaN(zeroHeightDurationSmallNegative)).to.equal(true);
       const zeroHeightDurationBigNegative = getAutoHeightDuration(-100000);
-      // eslint-disable-next-line no-restricted-globals
-      expect(isNaN(zeroHeightDurationBigNegative)).to.equal(true);
+      expect(Number.isNaN(zeroHeightDurationBigNegative)).to.equal(true);
     });
 
     it('should return values for pre-calculated positive examples', () => {
@@ -148,7 +155,7 @@ describe('createTransitions', () => {
       zeroHeightDuration = getAutoHeightDuration(0.0001);
       expect(zeroHeightDuration).to.equal(46);
       zeroHeightDuration = getAutoHeightDuration(100000);
-      expect(zeroHeightDuration).to.equal(6685);
+      expect(zeroHeightDuration).to.equal(3000);
     });
   });
 });

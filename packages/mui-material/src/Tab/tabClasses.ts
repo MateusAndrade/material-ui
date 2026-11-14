@@ -1,15 +1,16 @@
-import { generateUtilityClass, generateUtilityClasses } from '@mui/core';
+import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
+import generateUtilityClass from '@mui/utils/generateUtilityClass';
 
 export interface TabClasses {
   /** Styles applied to the root element. */
   root: string;
   /** Styles applied to the root element if both `icon` and `label` are provided. */
   labelIcon: string;
-  /** Styles applied to the root element if the parent [`Tabs`](/api/tabs/) has `textColor="inherit"`. */
+  /** Styles applied to the root element if the parent [`Tabs`](/material-ui/api/tabs/) has `textColor="inherit"`. */
   textColorInherit: string;
-  /** Styles applied to the root element if the parent [`Tabs`](/api/tabs/) has `textColor="primary"`. */
+  /** Styles applied to the root element if the parent [`Tabs`](/material-ui/api/tabs/) has `textColor="primary"`. */
   textColorPrimary: string;
-  /** Styles applied to the root element if the parent [`Tabs`](/api/tabs/) has `textColor="secondary"`. */
+  /** Styles applied to the root element if the parent [`Tabs`](/material-ui/api/tabs/) has `textColor="secondary"`. */
   textColorSecondary: string;
   /** State class applied to the root element if `selected={true}` (controlled by the Tabs component). */
   selected: string;
@@ -19,8 +20,8 @@ export interface TabClasses {
   fullWidth: string;
   /** Styles applied to the root element if `wrapped={true}`. */
   wrapped: string;
-  /** Styles applied to the wrapper element of `icon` if `icon` is provided. */
-  iconWrapper: string;
+  /** Styles applied to the `icon` HTML element if both `icon` and `label` are provided. */
+  icon: string;
 }
 
 export type TabClassKey = keyof TabClasses;
@@ -39,7 +40,7 @@ const tabClasses: TabClasses = generateUtilityClasses('MuiTab', [
   'disabled',
   'fullWidth',
   'wrapped',
-  'iconWrapper',
+  'icon',
 ]);
 
 export default tabClasses;

@@ -1,7 +1,12 @@
 import * as React from 'react';
+import { OverridableStringUnion } from '@mui/types';
 import { SxProps } from '@mui/system';
-import { InternalStandardProps as StandardProps, Theme } from '..';
+import { Theme } from '../styles';
+import { InternalStandardProps as StandardProps } from '../internal';
 import { TableCellClasses } from './tableCellClasses';
+
+export interface TableCellPropsSizeOverrides {}
+export interface TableCellPropsVariantOverrides {}
 
 /**
  * `<TableCell>` will be rendered as an `<th>`or `<td>` depending
@@ -19,7 +24,7 @@ export interface TableCellProps extends StandardProps<TableCellBaseProps, 'align
    * you to add them up quickly in your head without having to worry about decimals.
    * @default 'inherit'
    */
-  align?: 'inherit' | 'left' | 'center' | 'right' | 'justify';
+  align?: 'inherit' | 'left' | 'center' | 'right' | 'justify' | undefined;
   /**
    * The content of the component.
    */
@@ -27,39 +32,40 @@ export interface TableCellProps extends StandardProps<TableCellBaseProps, 'align
   /**
    * Override or extend the styles applied to the component.
    */
-  classes?: Partial<TableCellClasses>;
+  classes?: Partial<TableCellClasses> | undefined;
   /**
    * The component used for the root node.
    * Either a string to use a HTML element or a component.
    */
-  component?: React.ElementType<TableCellBaseProps>;
+  component?: React.ElementType<TableCellBaseProps> | undefined;
   /**
    * Sets the padding applied to the cell.
    * The prop defaults to the value (`'default'`) inherited from the parent Table component.
    */
-  padding?: 'normal' | 'checkbox' | 'none';
+  padding?: 'normal' | 'checkbox' | 'none' | undefined;
   /**
    * Set scope attribute.
    */
-  scope?: TableCellBaseProps['scope'];
+  scope?: TableCellBaseProps['scope'] | undefined;
   /**
    * Specify the size of the cell.
    * The prop defaults to the value (`'medium'`) inherited from the parent Table component.
    */
-  size?: 'small' | 'medium';
+  size?: OverridableStringUnion<'small' | 'medium', TableCellPropsSizeOverrides> | undefined;
   /**
    * Set aria-sort direction.
    */
-  sortDirection?: SortDirection;
+  sortDirection?: SortDirection | undefined;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx?: SxProps<Theme>;
+  sx?: SxProps<Theme> | undefined;
   /**
    * Specify the cell type.
    * The prop defaults to the value inherited from the parent TableHead, TableBody, or TableFooter components.
    */
-  variant?: 'head' | 'body' | 'footer';
+  variant?:
+    OverridableStringUnion<'head' | 'body' | 'footer', TableCellPropsVariantOverrides> | undefined;
 }
 
 export type TableCellBaseProps = React.ThHTMLAttributes<HTMLTableCellElement> &
@@ -73,10 +79,10 @@ export type SortDirection = 'asc' | 'desc' | false;
  *
  * Demos:
  *
- * - [Tables](https://mui.com/components/tables/)
+ * - [Table](https://next.mui.com/material-ui/react-table/)
  *
  * API:
  *
- * - [TableCell API](https://mui.com/api/table-cell/)
+ * - [TableCell API](https://next.mui.com/material-ui/api/table-cell/)
  */
-export default function TableCell(props: TableCellProps): JSX.Element;
+export default function TableCell(props: TableCellProps): React.JSX.Element;

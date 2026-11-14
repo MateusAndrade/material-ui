@@ -1,22 +1,25 @@
+import { describe, it, expect, vi } from 'vitest';
 import * as React from 'react';
-import { expect } from 'chai';
 import { spy, stub } from 'sinon';
 import {
-  describeConformance,
   act,
-  createClientRender,
+  createRenderer,
   fireEvent,
   focusVisible,
   simulatePointerDevice,
   programmaticFocusTriggersFocusVisible,
-} from 'test/utils';
+  screen,
+  isJsdom,
+} from '@mui/internal-test-utils';
 import Avatar from '@mui/material/Avatar';
 import Chip, { chipClasses as classes } from '@mui/material/Chip';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme, hexToRgb } from '@mui/material/styles';
 import CheckBox from '../internal/svg-icons/CheckBox';
+import defaultTheme from '../styles/defaultTheme';
+import describeConformance from '../../test/describeConformance';
 
 describe('<Chip />', () => {
-  const render = createClientRender();
+  const { render } = createRenderer();
 
   describeConformance(<Chip />, () => ({
     classes,
@@ -28,7 +31,14 @@ describe('<Chip />', () => {
     testStatOverrides: { prop: 'size', value: 'small', styleKey: 'sizeSmall' },
     refInstanceof: window.HTMLDivElement,
     testComponentPropWith: 'span',
-    skip: ['componentsProp'],
+    slots: {
+      root: {
+        expectedClassName: classes.root,
+      },
+      label: {
+        expectedClassName: classes.label,
+      },
+    },
   }));
 
   describe('text only', () => {
@@ -48,38 +58,130 @@ describe('<Chip />', () => {
       expect(label).to.have.text('My text Chip');
 
       expect(chip).to.have.class(classes.root);
+      expect(chip).to.have.class(classes.colorDefault);
       expect(chip).not.to.have.class(classes.colorPrimary);
       expect(chip).not.to.have.class(classes.colorSecondary);
       expect(chip).not.to.have.class(classes.clickable);
-      expect(chip).not.to.have.class(classes.clickableColorPrimary);
-      expect(chip).not.to.have.class(classes.clickableColorSecondary);
       expect(chip).not.to.have.class(classes.deletable);
-      expect(chip).not.to.have.class(classes.deletableColorPrimary);
-      expect(chip).not.to.have.class(classes.deletableColorSecondary);
     });
 
-    it('should render with the root and the primary class', () => {
-      const { container } = render(<Chip color="primary" />);
+    it('should render with the color class name based on the color prop', () => {
+      const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
-      const chip = container.querySelector(`.${classes.root}`);
-      expect(chip).to.have.class(classes.colorPrimary);
-    });
-
-    it('should render with the root and the secondary class', () => {
-      const { container } = render(<Chip color="secondary" />);
-
-      const chip = container.querySelector(`.${classes.root}`);
-      expect(chip).to.have.class(classes.colorSecondary);
+      ['primary', 'secondary', 'info', 'error', 'warning', 'success'].forEach((color) => {
+        const { container } = render(<Chip color={color} />);
+        const chip = container.querySelector(`.${classes.root}`);
+        expect(chip).to.have.class(classes[`color${capitalize(color)}`]);
+      });
     });
   });
 
   describe('clickable chip', () => {
-    it('renders as a button in taborder with the label as the accessible name', () => {
-      const { getByRole } = render(<Chip label="My Chip" onClick={() => {}} />);
+    /**
+     * @param {{ mock: { calls: unknown[][] } }} errorSpy
+     * @returns {string[]}
+     */
+    function getWarningMessages(errorSpy) {
+      return errorSpy.mock.calls.map((call) =>
+        String(call[0]).replace(/\s+/g, ' ').trim().toLowerCase(),
+      );
+    }
 
-      const button = getByRole('button');
+    /**
+     * @param {{ mock: { calls: unknown[][] } }} errorSpy
+     * @param {string[]} fragments
+     */
+    function expectWarningWithFragments(errorSpy, fragments) {
+      const messages = getWarningMessages(errorSpy);
+
+      expect(messages.length).to.be.greaterThanOrEqual(1);
+      expect(
+        messages.some((message) =>
+          fragments.every((fragment) => message.includes(fragment.toLowerCase())),
+        ),
+      ).to.equal(true);
+    }
+
+    it('renders as a button in taborder with the label as the accessible name', () => {
+      render(<Chip label="My Chip" onClick={() => {}} />);
+
+      const button = screen.getByRole('button');
       expect(button).to.have.property('tabIndex', 0);
       expect(button).toHaveAccessibleName('My Chip');
+    });
+
+    it('forwards nativeButton to ButtonBase when interactive', () => {
+      const CustomButton = React.forwardRef((props, ref) => <button ref={ref} {...props} />);
+
+      render(<Chip label="My Chip" onClick={() => {}} component={CustomButton} nativeButton />);
+
+      const chip = screen.getByRole('button');
+      expect(chip).to.have.tagName('BUTTON');
+      expect(chip).to.have.attribute('type', 'button');
+    });
+
+    it('does not leak nativeButton to DOM when not interactive', () => {
+      const { container } = render(<Chip label="My Chip" nativeButton />);
+
+      expect(container.firstChild).to.have.tagName('DIV');
+      expect(container.firstChild).not.to.have.attribute('nativebutton');
+    });
+
+    it('does not leak disabled-focus props from slotProps.root to the DOM when not interactive', () => {
+      const { container } = render(
+        <Chip
+          label="My Chip"
+          slotProps={{ root: { focusableWhenDisabled: true, skipFocusWhenDisabled: true } }}
+        />,
+      );
+
+      expect(container.firstChild).to.have.tagName('DIV');
+      expect(container.firstChild).not.to.have.attribute('focusablewhendisabled');
+      expect(container.firstChild).not.to.have.attribute('skipfocuswhendisabled');
+    });
+
+    it('does not forward focusableWhenDisabled to ButtonBase', () => {
+      render(<Chip label="My Chip" disabled onClick={() => {}} focusableWhenDisabled />);
+
+      const chip = screen.getByRole('button');
+      expect(chip).to.have.attribute('aria-disabled', 'true');
+      expect(chip).to.have.attribute('tabindex', '-1');
+    });
+
+    it('does not warn when nativeButton is omitted and a custom non-button component is used', () => {
+      const CustomSpan = React.forwardRef((props, ref) => <span ref={ref} {...props} />);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(<Chip label="My Chip" onClick={() => {}} component={CustomSpan} />);
+
+      const messages = getWarningMessages(errorSpy);
+      expect(messages.some((message) => message.includes('nativebutton={false}'))).to.equal(false);
+      expect(screen.getByRole('button')).to.have.tagName('SPAN');
+      errorSpy.mockRestore();
+    });
+
+    it('warns when nativeButton is omitted and a custom button component is used', () => {
+      const CustomButton = React.forwardRef((props, ref) => <button ref={ref} {...props} />);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(<Chip label="My Chip" onClick={() => {}} component={CustomButton} />);
+
+      expectWarningWithFragments(errorSpy, ['nativebutton={true}', 'native <button>']);
+      errorSpy.mockRestore();
+    });
+
+    it('does not warn when nativeButton={false} is set with a custom non-button component', () => {
+      const CustomSpan = React.forwardRef((props, ref) => <span ref={ref} {...props} />);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(
+        <Chip label="My Chip" onClick={() => {}} component={CustomSpan} nativeButton={false} />,
+      );
+
+      const messages = getWarningMessages(errorSpy);
+      expect(messages.some((message) => message.includes('nativebutton={false}'))).to.equal(false);
+      expect(screen.getByRole('button')).to.have.tagName('SPAN');
+      errorSpy.mockRestore();
     });
 
     it('should render link with the button base', () => {
@@ -87,7 +189,6 @@ describe('<Chip />', () => {
 
       expect(container.firstChild).to.have.class('MuiButtonBase-root');
       expect(container.firstChild).to.have.tagName('a');
-      expect(container.firstChild.querySelector('.MuiTouchRipple-root')).not.to.equal(null);
     });
 
     it('should disable ripple when MuiButtonBase has disableRipple in theme', () => {
@@ -112,9 +213,9 @@ describe('<Chip />', () => {
     });
 
     it('should apply user value of tabIndex', () => {
-      const { getByRole } = render(<Chip label="My Chip" onClick={() => {}} tabIndex={5} />);
+      render(<Chip label="My Chip" onClick={() => {}} tabIndex={5} />);
 
-      expect(getByRole('button')).to.have.property('tabIndex', 5);
+      expect(screen.getByRole('button')).to.have.property('tabIndex', 5);
     });
 
     it('should render with the root and clickable class', () => {
@@ -126,13 +227,12 @@ describe('<Chip />', () => {
     });
 
     it('should render with the root and clickable primary class', () => {
-      const { getByRole } = render(<Chip label="My Chip" onClick={() => {}} color="primary" />);
+      render(<Chip label="My Chip" onClick={() => {}} color="primary" />);
 
-      const button = getByRole('button');
+      const button = screen.getByRole('button');
       expect(button).to.have.class(classes.root);
       expect(button).to.have.class(classes.colorPrimary);
       expect(button).to.have.class(classes.clickable);
-      expect(button).to.have.class(classes.clickableColorPrimary);
     });
 
     it('should render with the root and outlined clickable primary class', () => {
@@ -144,27 +244,64 @@ describe('<Chip />', () => {
       expect(chip).to.have.class(classes.root);
       expect(chip).to.have.class(classes.colorPrimary);
       expect(chip).to.have.class(classes.clickable);
-      expect(chip).to.have.class(classes.clickableColorPrimary);
       expect(chip).to.have.class(classes.outlined);
-      expect(chip).to.have.class(classes.outlinedPrimary);
     });
 
-    it('should render with the root and clickable secondary class', () => {
-      const { getByRole } = render(
-        <Chip color="secondary" label="My Chip" onClick={() => {}} variant="outlined" />,
-      );
+    it('should render with the root and outlined clickable secondary class', () => {
+      render(<Chip color="secondary" label="My Chip" onClick={() => {}} variant="outlined" />);
 
-      const button = getByRole('button');
+      const button = screen.getByRole('button');
       expect(button).to.have.class(classes.root);
       expect(button).to.have.class(classes.colorSecondary);
       expect(button).to.have.class(classes.clickable);
-      expect(button).to.have.class(classes.clickableColorSecondary);
+      expect(button).to.have.class(classes.outlined);
+    });
+
+    it('should render with the root and filled clickable primary class', () => {
+      render(<Chip color="primary" label="My Chip" onClick={() => {}} variant="filled" />);
+
+      const chip = screen.getByRole('button');
+      expect(chip).to.have.class(classes.root);
+      expect(chip).to.have.class(classes.colorPrimary);
+      expect(chip).to.have.class(classes.clickable);
+      expect(chip).to.have.class(classes.filled);
+    });
+
+    it('should not be focused when a deletable chip is disabled and skipFocusWhenDisabled is true', () => {
+      render(
+        <Chip
+          label="My Chip"
+          disabled
+          data-testid="chip"
+          skipFocusWhenDisabled
+          onDelete={() => {}}
+        />,
+      );
+
+      const chip = screen.getByTestId('chip');
+
+      simulatePointerDevice();
+      fireEvent.keyDown(document.body, { key: 'Tab' });
+
+      expect(chip).to.have.class(classes.root);
+      expect(chip).to.have.property('tabIndex', -1);
+      expect(chip).not.to.have.class(classes.focusVisible);
+    });
+
+    it('should render with the root and filled clickable secondary class', () => {
+      render(<Chip color="secondary" label="My Chip" onClick={() => {}} variant="filled" />);
+
+      const chip = screen.getByRole('button');
+      expect(chip).to.have.class(classes.root);
+      expect(chip).to.have.class(classes.colorSecondary);
+      expect(chip).to.have.class(classes.clickable);
+      expect(chip).to.have.class(classes.filled);
     });
   });
 
   describe('deletable Avatar chip', () => {
     it('should render a button in tab order with the avatar', () => {
-      const { container, getByRole } = render(
+      const { container } = render(
         <Chip
           avatar={<Avatar id="avatar">MB</Avatar>}
           label="Text Avatar Chip"
@@ -172,7 +309,7 @@ describe('<Chip />', () => {
         />,
       );
 
-      expect(getByRole('button')).to.have.property('tabIndex', 0);
+      expect(screen.getByRole('button')).to.have.property('tabIndex', 0);
       expect(container.querySelector('#avatar')).not.to.equal(null);
     });
 
@@ -185,7 +322,7 @@ describe('<Chip />', () => {
     });
 
     it('should apply user value of tabIndex', () => {
-      const { container, getByRole } = render(
+      const { container } = render(
         <Chip
           avatar={<Avatar id="avatar">MB</Avatar>}
           label="Text Avatar Chip"
@@ -194,7 +331,7 @@ describe('<Chip />', () => {
         />,
       );
 
-      expect(getByRole('button')).to.have.property('tabIndex', 5);
+      expect(screen.getByRole('button')).to.have.property('tabIndex', 5);
       const elementsInTabOrder = Array.from(container.querySelectorAll('[tabIndex]')).filter(
         (element) => element.tabIndex >= 0,
       );
@@ -203,7 +340,8 @@ describe('<Chip />', () => {
 
     it('fires onDelete when clicking the delete icon', () => {
       const handleDelete = spy();
-      const { getByTestId } = render(
+
+      render(
         <Chip
           avatar={<Avatar id="avatar">MB</Avatar>}
           label="Text Avatar Chip"
@@ -211,7 +349,8 @@ describe('<Chip />', () => {
           deleteIcon={<div data-testid="delete-icon" />}
         />,
       );
-      const deleteIcon = getByTestId('delete-icon');
+
+      const deleteIcon = screen.getByTestId('delete-icon');
 
       fireEvent.click(deleteIcon);
 
@@ -220,7 +359,8 @@ describe('<Chip />', () => {
 
     it('should stop propagation when clicking the delete icon', () => {
       const handleClick = spy();
-      const { getByTestId } = render(
+
+      render(
         <Chip
           avatar={<Avatar id="avatar">MB</Avatar>}
           label="Text Avatar Chip"
@@ -229,7 +369,8 @@ describe('<Chip />', () => {
           deleteIcon={<div data-testid="delete-icon" />}
         />,
       );
-      const deleteIcon = getByTestId('delete-icon');
+
+      const deleteIcon = screen.getByTestId('delete-icon');
 
       fireEvent.click(deleteIcon);
 
@@ -262,9 +403,8 @@ describe('<Chip />', () => {
       const chip = container.querySelector(`.${classes.root}`);
       expect(chip).to.have.class(classes.colorPrimary);
       expect(chip).to.have.class(classes.deletable);
-      expect(chip).to.have.class(classes.deletableColorPrimary);
       const avatar = container.querySelector(`.${classes.avatar}`);
-      expect(avatar).to.have.class(classes.avatarColorPrimary);
+      expect(avatar).to.have.class(classes.avatar);
     });
 
     it('should render with the root, deletable and avatar secondary classes', () => {
@@ -280,68 +420,89 @@ describe('<Chip />', () => {
       const chip = container.querySelector(`.${classes.root}`);
       expect(chip).to.have.class(classes.colorSecondary);
       expect(chip).to.have.class(classes.deletable);
-      expect(chip).to.have.class(classes.deletableColorSecondary);
       const avatar = container.querySelector(`.${classes.avatar}`);
-      expect(avatar).to.have.class(classes.avatarColorSecondary);
+      expect(avatar).to.have.class(classes.avatar);
     });
   });
 
   describe('prop: deleteIcon', () => {
-    it('should render a default icon with the root, deletable, deleteIcon and deleteIconOutlinedColorSecondary classes', () => {
-      const { getByRole, getByTestId } = render(
-        <Chip label="Custom delete icon Chip" onDelete={() => {}} />,
-      );
-
-      const icon = getByTestId('CancelIcon');
-      expect(getByRole('button')).to.contain(icon);
-      expect(icon).to.have.class(classes.deleteIcon);
-    });
-
     it('should render a default icon with the root, deletable and deleteIcon classes', () => {
-      const { getByRole, getByTestId } = render(
-        <Chip label="Custom delete icon Chip" onDelete={() => {}} />,
-      );
+      render(<Chip label="Custom delete icon Chip" onDelete={() => {}} />);
 
-      const icon = getByTestId('CancelIcon');
-      expect(getByRole('button')).to.contain(icon);
+      const chip = screen.getByRole('button');
+      const icon = screen.getByTestId('CancelIcon');
+
+      expect(chip).to.have.class(classes.deletable);
+      expect(chip).to.contain(icon);
       expect(icon).to.have.class(classes.deleteIcon);
     });
 
     it('should render default icon with the root, deletable and deleteIcon primary class', () => {
-      const { container, getByTestId } = render(
+      const { container } = render(
         <Chip label="Custom delete icon Chip" onDelete={() => {}} color="primary" />,
       );
 
       const chip = container.querySelector(`.${classes.root}`);
       expect(chip).to.have.class(classes.colorPrimary);
       expect(chip).to.have.class(classes.deletable);
-      expect(chip).to.have.class(classes.deletableColorPrimary);
-      const icon = getByTestId('CancelIcon');
+      const icon = screen.getByTestId('CancelIcon');
       expect(icon).to.have.class(classes.deleteIcon);
-      expect(icon).to.have.class(classes.deleteIconColorPrimary);
     });
 
     it('should render a default icon with the root, deletable, deleteIcon secondary class', () => {
-      const { container, getByTestId } = render(
+      const { container } = render(
         <Chip label="Custom delete icon Chip" onDelete={() => {}} color="secondary" />,
       );
 
       const chip = container.querySelector(`.${classes.root}`);
       expect(chip).to.have.class(classes.colorSecondary);
       expect(chip).to.have.class(classes.deletable);
-      expect(chip).to.have.class(classes.deletableColorSecondary);
-      const icon = getByTestId('CancelIcon');
+      const icon = screen.getByTestId('CancelIcon');
       expect(icon).to.have.class(classes.deleteIcon);
-      expect(icon).to.have.class(classes.deleteIconColorSecondary);
+    });
+
+    it('should render default icon with the root, deletable, deleteIcon primary class and deleteIcon filled primary class', () => {
+      const { container } = render(
+        <Chip
+          label="Custom delete icon Chip"
+          onDelete={() => {}}
+          color="primary"
+          variant="filled"
+        />,
+      );
+
+      const chip = container.querySelector(`.${classes.root}`);
+      expect(chip).to.have.class(classes.colorPrimary);
+      expect(chip).to.have.class(classes.deletable);
+      const icon = screen.getByTestId('CancelIcon');
+      expect(icon).to.have.class(classes.deleteIcon);
+    });
+
+    it('should render default icon with the root, deletable, deleteIcon primary class and deleteIcon outlined primary class', () => {
+      const { container } = render(
+        <Chip
+          label="Custom delete icon Chip"
+          onDelete={() => {}}
+          color="primary"
+          variant="outlined"
+        />,
+      );
+
+      const chip = container.querySelector(`.${classes.root}`);
+      expect(chip).to.have.class(classes.colorPrimary);
+      expect(chip).to.have.class(classes.deletable);
+      const icon = screen.getByTestId('CancelIcon');
+      expect(icon).to.have.class(classes.deleteIcon);
     });
 
     it('accepts a custom icon', () => {
       const handleDelete = spy();
-      const { getByTestId } = render(
+
+      render(
         <Chip label="Custom delete icon Chip" onDelete={handleDelete} deleteIcon={<CheckBox />} />,
       );
 
-      fireEvent.click(getByTestId('CheckBoxIcon'));
+      fireEvent.click(screen.getByTestId('CheckBoxIcon'));
 
       expect(handleDelete.callCount).to.equal(1);
     });
@@ -350,8 +511,8 @@ describe('<Chip />', () => {
   describe('reacts to keyboard chip', () => {
     it('should call onKeyDown when a key is pressed', () => {
       const handleKeydown = stub().callsFake((event) => event.key);
-      const { getByRole } = render(<Chip onClick={() => {}} onKeyDown={handleKeydown} />);
-      const chip = getByRole('button');
+      render(<Chip onClick={() => {}} onKeyDown={handleKeydown} />);
+      const chip = screen.getByRole('button');
       act(() => {
         chip.focus();
       });
@@ -362,27 +523,10 @@ describe('<Chip />', () => {
       expect(handleKeydown.firstCall.returnValue).to.equal('p');
     });
 
-    it('should unfocus when a esc key is pressed', () => {
-      const handleBlur = spy();
-      const handleKeydown = spy();
-      const { getByRole } = render(
-        <Chip onBlur={handleBlur} onClick={() => {}} onKeyDown={handleKeydown} />,
-      );
-      const chip = getByRole('button');
-      act(() => {
-        chip.focus();
-      });
-
-      fireEvent.keyUp(chip, { key: 'Escape' });
-
-      expect(handleBlur.callCount).to.equal(1);
-      expect(chip).not.toHaveFocus();
-    });
-
-    it('should call onClick when `space` is released ', () => {
+    it('should call onClick when `space` is released', () => {
       const handleClick = spy();
-      const { getByRole } = render(<Chip onClick={handleClick} />);
-      const chip = getByRole('button');
+      render(<Chip onClick={handleClick} />);
+      const chip = screen.getByRole('button');
       act(() => {
         chip.focus();
       });
@@ -392,10 +536,10 @@ describe('<Chip />', () => {
       expect(handleClick.callCount).to.equal(1);
     });
 
-    it('should call onClick when `enter` is pressed ', () => {
+    it('should call onClick when `enter` is pressed', () => {
       const handleClick = spy();
-      const { getByRole } = render(<Chip onClick={handleClick} />);
-      const chip = getByRole('button');
+      render(<Chip onClick={handleClick} />);
+      const chip = screen.getByRole('button');
       act(() => {
         chip.focus();
       });
@@ -407,13 +551,13 @@ describe('<Chip />', () => {
 
     describe('prop: onDelete', () => {
       ['Backspace', 'Delete'].forEach((key) => {
-        it(`should call onDelete '${key}' is released`, () => {
+        it(`should call onDelete when '${key}' is released`, () => {
           const handleDelete = spy();
           const handleKeyDown = spy();
-          const { getAllByRole } = render(
-            <Chip onClick={() => {}} onKeyDown={handleKeyDown} onDelete={handleDelete} />,
-          );
-          const chip = getAllByRole('button')[0];
+
+          render(<Chip onClick={() => {}} onKeyDown={handleKeyDown} onDelete={handleDelete} />);
+
+          const chip = screen.getAllByRole('button')[0];
           act(() => {
             chip.focus();
           });
@@ -429,6 +573,19 @@ describe('<Chip />', () => {
 
           expect(handleDelete.callCount).to.equal(1);
         });
+      });
+
+      it('should not call onDelete when disabled', () => {
+        const handleDelete = spy();
+        render(<Chip label="Chip" disabled onDelete={handleDelete} />);
+        const chip = screen.getByRole('button');
+        act(() => {
+          chip.focus();
+        });
+
+        fireEvent.keyUp(chip, { key: 'Backspace' });
+
+        expect(handleDelete.callCount).to.equal(0);
       });
 
       it('should not prevent default on input', () => {
@@ -531,9 +688,29 @@ describe('<Chip />', () => {
 
   describe('prop: icon', () => {
     it('should render the icon', () => {
-      const { getByTestId } = render(<Chip icon={<span data-testid="test-icon" />} />);
+      render(<Chip icon={<span data-testid="test-icon" />} />);
 
-      expect(getByTestId('test-icon')).to.have.class(classes.icon);
+      expect(screen.getByTestId('test-icon')).to.have.class(classes.icon);
+    });
+
+    it("should not override the icon's custom color", () => {
+      render(
+        <React.Fragment>
+          <Chip icon={<CheckBox data-testid="test-icon" color="success" />} />,
+          <Chip icon={<CheckBox data-testid="test-icon2" color="success" />} color="error" />,
+        </React.Fragment>,
+      );
+
+      expect(screen.getByTestId('test-icon')).to.have.class(classes.icon);
+      expect(screen.getByTestId('test-icon2')).to.have.class(classes.icon);
+      expect(screen.getByTestId('test-icon')).to.have.class('MuiSvgIcon-colorSuccess');
+      expect(screen.getByTestId('test-icon2')).to.have.class('MuiSvgIcon-colorSuccess');
+      expect(screen.getByTestId('test-icon')).toHaveComputedStyle({
+        color: hexToRgb(defaultTheme.palette.success.main),
+      });
+      expect(screen.getByTestId('test-icon2')).toHaveComputedStyle({
+        color: hexToRgb(defaultTheme.palette.success.main),
+      });
     });
   });
 
@@ -545,41 +722,46 @@ describe('<Chip />', () => {
       expect(chip).to.have.class(classes.sizeSmall);
     });
 
-    it('should render the label with the labelSmall class', () => {
+    it('should render the label with the sizeSmall chip', () => {
       const { container } = render(<Chip size="small" label="small chip" />);
 
+      const chip = container.querySelector(`.${classes.root}`);
       const label = container.querySelector(`.${classes.label}`);
-      expect(label).to.have.class(classes.labelSmall);
+      expect(chip).to.have.class(classes.sizeSmall);
+      expect(label).to.have.class(classes.label);
     });
 
-    it('should render an avatar with the avatarSmall class', () => {
+    it('should render an avatar on a sizeSmall chip', () => {
       const { container } = render(
         <Chip size="small" avatar={<Avatar className="my-Avatar">MB</Avatar>} />,
       );
 
+      const chip = container.querySelector(`.${classes.root}`);
       const avatar = container.querySelector('.my-Avatar');
+      expect(chip).to.have.class(classes.sizeSmall);
       expect(avatar).to.have.class(classes.avatar);
-      expect(avatar).to.have.class(classes.avatarSmall);
     });
 
-    it('should render an icon with the icon and iconSmall classes', () => {
+    it('should render an icon on a sizeSmall chip', () => {
       const { container } = render(<Chip size="small" icon={<span id="test-icon" />} />);
 
+      const chip = container.querySelector(`.${classes.root}`);
       const icon = container.querySelector('#test-icon');
+      expect(chip).to.have.class(classes.sizeSmall);
       expect(icon).to.have.class(classes.icon);
-      expect(icon).to.have.class(classes.iconSmall);
     });
 
-    it('should render the delete icon with the deleteIcon and deleteIconSmall classes', () => {
-      const { getByTestId } = render(<Chip size="small" onDelete={() => {}} />);
+    it('should render the delete icon on a sizeSmall chip', () => {
+      const { container } = render(<Chip size="small" onDelete={() => {}} />);
 
-      const icon = getByTestId('CancelIcon');
+      const chip = container.querySelector(`.${classes.root}`);
+      const icon = screen.getByTestId('CancelIcon');
+      expect(chip).to.have.class(classes.sizeSmall);
       expect(icon).to.have.class(classes.deleteIcon);
-      expect(icon).to.have.class(classes.deleteIconSmall);
     });
   });
 
-  describe('event: focus', () => {
+  describe.skipIf(isJsdom())('event: focus', () => {
     it('has a focus-visible polyfill', () => {
       const { container } = render(<Chip label="Test Chip" onClick={() => {}} />);
       const chip = container.querySelector(`.${classes.root}`);
@@ -615,5 +797,55 @@ describe('<Chip />', () => {
 
       expect(chip).not.to.have.class(classes.focusVisible);
     });
+  });
+
+  describe('CSS vars', () => {
+    it('should not throw when there is theme value is CSS variable', () => {
+      const theme = createTheme({ cssVariables: true });
+      theme.palette = theme.colorSchemes.light.palette;
+      theme.palette.text = {
+        ...theme.palette.text,
+        primary: 'var(--mui-palette-grey-900)',
+      };
+      expect(() =>
+        render(
+          <ThemeProvider disableStyleSheetGeneration theme={theme}>
+            <Chip label="Test Chip" />
+          </ThemeProvider>,
+        ),
+      ).not.to.throw();
+    });
+  });
+
+  it('should not throw on clicking Chip when onClick is not provided', () => {
+    expect(() => {
+      render(<Chip data-testid="chip" />);
+      const chip = screen.getByTestId('chip');
+      fireEvent.click(chip);
+    }).not.throw();
+  });
+
+  it('should not throw on keydown when onKeyDown is not provided', () => {
+    expect(() => {
+      render(<Chip data-testid="chip" onClick={() => {}} />);
+      const chip = screen.getByTestId('chip');
+      act(() => {
+        chip.focus();
+      });
+
+      fireEvent.keyDown(chip, { key: 'Enter' });
+    }).not.throw();
+  });
+
+  it('should not throw on keyup when onKeyUp is not provided', () => {
+    expect(() => {
+      render(<Chip data-testid="chip" onClick={() => {}} />);
+      const chip = screen.getByTestId('chip');
+      act(() => {
+        chip.focus();
+      });
+
+      fireEvent.keyUp(chip, { key: ' ' });
+    }).not.throw();
   });
 });

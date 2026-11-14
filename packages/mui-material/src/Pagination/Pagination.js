@@ -1,13 +1,18 @@
+'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { unstable_composeClasses as composeClasses } from '@mui/core';
-import { integerPropType } from '@mui/utils';
-import useThemeProps from '../styles/useThemeProps';
+import composeClasses from '@mui/utils/composeClasses';
+import integerPropType from '@mui/utils/integerPropType';
 import { getPaginationUtilityClass } from './paginationClasses';
 import usePagination from '../usePagination';
 import PaginationItem from '../PaginationItem';
-import styled from '../styles/styled';
+import { styled } from '../zero-styled';
+import { useDefaultProps } from '../DefaultPropsProvider';
+import { useForkRef } from '../utils';
+import getActiveElement from '../utils/getActiveElement';
+import ownerDocument from '../utils/ownerDocument';
+import useEnhancedEffect from '../utils/useEnhancedEffect';
 
 const useUtilityClasses = (ownerState) => {
   const { classes, variant } = ownerState;
@@ -33,7 +38,6 @@ const PaginationRoot = styled('nav', {
 const PaginationUl = styled('ul', {
   name: 'MuiPagination',
   slot: 'Ul',
-  overridesResolver: (props, styles) => styles.ul,
 })({
   display: 'flex',
   flexWrap: 'wrap',
@@ -51,7 +55,7 @@ function defaultGetAriaLabel(type, page, selected) {
 }
 
 const Pagination = React.forwardRef(function Pagination(inProps, ref) {
-  const props = useThemeProps({ props: inProps, name: 'MuiPagination' });
+  const props = useDefaultProps({ props: inProps, name: 'MuiPagination' });
   const {
     boundaryCount = 1,
     className,
@@ -97,12 +101,64 @@ const Pagination = React.forwardRef(function Pagination(inProps, ref) {
 
   const classes = useUtilityClasses(ownerState);
 
+  const paginationRef = React.useRef(null);
+  const pendingFocusRef = React.useRef(null);
+  const handleRef = useForkRef(ref, paginationRef);
+
+  const selectedPage = items.find((item) => item.selected)?.page;
+
+  const handleItemClick = React.useCallback(
+    (item, event) => {
+      pendingFocusRef.current = null;
+
+      const willBecomeDisabled =
+        ((item.type === 'first' || item.type === 'previous') && item.page === 1) ||
+        ((item.type === 'next' || item.type === 'last') && item.page === count);
+
+      if (
+        willBecomeDisabled &&
+        getActiveElement(ownerDocument(event.currentTarget)) === event.currentTarget
+      ) {
+        pendingFocusRef.current = {
+          page: item.page,
+          trigger: event.currentTarget,
+        };
+      }
+
+      item.onClick(event);
+    },
+    [count],
+  );
+
+  useEnhancedEffect(() => {
+    const pending = pendingFocusRef.current;
+
+    if (!pending || pending.page !== selectedPage) {
+      return;
+    }
+
+    const document = ownerDocument(paginationRef.current);
+    const activeElement = getActiveElement(document);
+
+    // if focus was lost to the body or to the disabled button, restore it to the selected page
+    if (
+      activeElement === document.body ||
+      activeElement === document.documentElement ||
+      activeElement === pending.trigger ||
+      activeElement == null
+    ) {
+      paginationRef.current.querySelector('[aria-current="page"]')?.focus();
+    }
+
+    pendingFocusRef.current = null;
+  }, [selectedPage]);
+
   return (
     <PaginationRoot
       aria-label="pagination navigation"
       className={clsx(classes.root, className)}
       ownerState={ownerState}
-      ref={ref}
+      ref={handleRef}
       {...other}
     >
       <PaginationUl className={classes.ul} ownerState={ownerState}>
@@ -115,6 +171,7 @@ const Pagination = React.forwardRef(function Pagination(inProps, ref) {
               shape,
               size,
               variant,
+              onClick: (event) => handleItemClick(item, event),
             })}
           </li>
         ))}
@@ -126,10 +183,10 @@ const Pagination = React.forwardRef(function Pagination(inProps, ref) {
 // @default tags synced with default values from usePagination
 
 Pagination.propTypes /* remove-proptypes */ = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // |     To update them edit the d.ts file and run "yarn proptypes"     |
-  // ----------------------------------------------------------------------
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
   /**
    * Number of always visible pages at the beginning and end.
    * @default 1
@@ -139,12 +196,11 @@ Pagination.propTypes /* remove-proptypes */ = {
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
-  /**
-   * @ignore
-   */
   className: PropTypes.string,
   /**
    * The active color.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
    * @default 'standard'
    */
   color: PropTypes /* @typescript-to-proptypes-ignore */.oneOfType([
@@ -170,10 +226,10 @@ Pagination.propTypes /* remove-proptypes */ = {
    * Accepts a function which returns a string value that provides a user-friendly name for the current page.
    * This is important for screen reader users.
    *
-   * For localization purposes, you can use the provided [translations](/guides/localization/).
-   * @param {string} type The link or button type to format ('page' | 'first' | 'last' | 'next' | 'previous'). Defaults to 'page'.
-   * @param {number} page The page number to format.
-   * @param {bool} selected If true, the current page is selected.
+   * For localization purposes, you can use the provided [translations](https://mui.com/material-ui/guides/localization/).
+   * @param {string} type The link or button type to format ('page' | 'first' | 'last' | 'next' | 'previous' | 'start-ellipsis' | 'end-ellipsis'). Defaults to 'page'.
+   * @param {number | null} page The page number to format.
+   * @param {boolean} selected If true, the current page is selected.
    * @returns {string}
    */
   getItemAriaLabel: PropTypes.func,
@@ -195,7 +251,7 @@ Pagination.propTypes /* remove-proptypes */ = {
    */
   onChange: PropTypes.func,
   /**
-   * The current page.
+   * The current page. Unlike `TablePagination`, which starts numbering from `0`, this pagination starts from `1`.
    */
   page: integerPropType,
   /**
@@ -236,7 +292,11 @@ Pagination.propTypes /* remove-proptypes */ = {
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
   /**
    * The variant to use.
    * @default 'text'

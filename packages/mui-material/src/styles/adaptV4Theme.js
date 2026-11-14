@@ -1,3 +1,4 @@
+'use client';
 import { createBreakpoints, createSpacing } from '@mui/system';
 
 export default function adaptV4Theme(inputTheme) {
@@ -37,7 +38,7 @@ export default function adaptV4Theme(inputTheme) {
     theme.components[component] = componentValue;
   });
 
-  // css overrides
+  // CSS overrides
   Object.keys(styleOverrides).forEach((component) => {
     const componentValue = theme.components[component] || {};
     componentValue.styleOverrides = styleOverrides[component];
